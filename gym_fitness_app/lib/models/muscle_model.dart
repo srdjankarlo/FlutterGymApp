@@ -1,13 +1,11 @@
 class MuscleModel {
   final int id;
   final String name;
-  final String? description;
   final String? image;
 
   MuscleModel({
     required this.id,
     required this.name,
-    this.description,
     this.image,
   });
 
@@ -15,7 +13,6 @@ class MuscleModel {
     return {
       'id': id,
       'name': name,
-      'description': description,
       'image': image,
     };
   }
@@ -24,7 +21,6 @@ class MuscleModel {
     return MuscleModel(
       id: map['id'] as int,
       name: map['name'],
-      description: map['description'],
       image: map['image'],
     );
   }

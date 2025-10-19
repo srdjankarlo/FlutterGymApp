@@ -69,16 +69,16 @@ class AppDatabase {
 
     // === Pre-fill muscle groups ===
     final muscles = [
-      MuscleModel(id: 1, name: 'Back', description: 'ToDo', image: 'assets/images/back.png'),
-      MuscleModel(id: 2, name: 'Chest', description: 'ToDo', image: 'assets/images/chest.png'),
-      MuscleModel(id: 3, name: 'Shoulders', description: 'ToDo', image: 'assets/images/shoulders.png'),
-      MuscleModel(id: 4, name: 'Biceps', description: 'ToDo', image: 'assets/images/biceps.png'),
-      MuscleModel(id: 5, name: 'Triceps', description: 'ToDo', image: 'assets/images/triceps.png'),
-      MuscleModel(id: 6, name: 'Abdomen', description: 'ToDo', image: 'assets/images/abdomen.png'),
-      MuscleModel(id: 7, name: 'Glutes', description: 'ToDo', image: 'assets/images/glutes.png'),
-      MuscleModel(id: 8, name: 'Quadriceps', description: 'ToDo', image: 'assets/images/quadriceps.png'),
-      MuscleModel(id: 9, name: 'Hamstrings', description: 'ToDo', image: 'assets/images/hamstrings.png'),
-      MuscleModel(id: 10, name: 'Calves', description: 'ToDo', image: 'assets/images/calves.png'),
+      MuscleModel(id: 1, name: 'Back', image: 'assets/images/back.png'),
+      MuscleModel(id: 2, name: 'Chest', image: 'assets/images/chest.png'),
+      MuscleModel(id: 3, name: 'Shoulders', image: 'assets/images/shoulders.png'),
+      MuscleModel(id: 4, name: 'Biceps', image: 'assets/images/biceps.png'),
+      MuscleModel(id: 5, name: 'Triceps', image: 'assets/images/triceps.png'),
+      MuscleModel(id: 6, name: 'Abdomen', image: 'assets/images/abdomen.png'),
+      MuscleModel(id: 7, name: 'Glutes', image: 'assets/images/glutes.png'),
+      MuscleModel(id: 8, name: 'Quadriceps', image: 'assets/images/quadriceps.png'),
+      MuscleModel(id: 9, name: 'Hamstrings', image: 'assets/images/hamstrings.png'),
+      MuscleModel(id: 10, name: 'Calves', image: 'assets/images/calves.png'),
     ];
 
     for (final muscle in muscles) {
@@ -88,54 +88,53 @@ class AppDatabase {
     // === Pre-fill exercises (each uses its muscle image) ===
     final exercises = [
       // Back
-      ExerciseModel(muscleId: 1, name: 'Pull-up', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Bent-over Row', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Lat Pulldown', image: 'assets/images/back.png'),
-
+      ExerciseModel(muscleId: 1, name: 'Pull-Up', image: 'assets/images/back.png'),
+      ExerciseModel(muscleId: 1, name: 'Deadlifts', image: 'assets/images/back.png'),
+      ExerciseModel(muscleId: 1, name: 'Barbell Bent-over Row', image: 'assets/images/back.png'),
+      ExerciseModel(muscleId: 1, name: 'Dumbbell Shrugs', image: 'assets/images/back.png'),
+      ExerciseModel(muscleId: 1, name: 'Back Extensions', image: 'assets/images/back.png'),
+      ExerciseModel(muscleId: 1, name: 'Scapular Pull-Ups', image: 'assets/images/back.png'),
       // Chest
+      ExerciseModel(muscleId: 2, name: 'Push-Ups', image: 'assets/images/chest.png'),
       ExerciseModel(muscleId: 2, name: 'Bench Press', image: 'assets/images/chest.png'),
-      ExerciseModel(muscleId: 2, name: 'Incline Dumbbell Press', image: 'assets/images/chest.png'),
-      ExerciseModel(muscleId: 2, name: 'Chest Fly', image: 'assets/images/chest.png'),
-
+      ExerciseModel(muscleId: 2, name: 'Incline Press', image: 'assets/images/chest.png'),
+      ExerciseModel(muscleId: 2, name: 'Peck Deck Fly', image: 'assets/images/chest.png'),
       // Shoulders
-      ExerciseModel(muscleId: 3, name: 'Overhead Press', image: 'assets/images/shoulders.png'),
       ExerciseModel(muscleId: 3, name: 'Lateral Raise', image: 'assets/images/shoulders.png'),
-      ExerciseModel(muscleId: 3, name: 'Front Raise', image: 'assets/images/shoulders.png'),
-
+      ExerciseModel(muscleId: 3, name: 'Bent-Over Lateral Raise', image: 'assets/images/shoulders.png'),
+      ExerciseModel(muscleId: 3, name: 'Standing Front Press', image: 'assets/images/shoulders.png'),
+      ExerciseModel(muscleId: 3, name: 'Cable Lateral Raise', image: 'assets/images/shoulders.png'),
+      ExerciseModel(muscleId: 3, name: 'Standing Face Pull', image: 'assets/images/shoulders.png'),
       // Biceps
+      ExerciseModel(muscleId: 5, name: 'Chin-Ups', image: 'assets/images/biceps.png'),
       ExerciseModel(muscleId: 4, name: 'Barbell Curl', image: 'assets/images/biceps.png'),
       ExerciseModel(muscleId: 4, name: 'Hammer Curl', image: 'assets/images/biceps.png'),
-      ExerciseModel(muscleId: 4, name: 'Concentration Curl', image: 'assets/images/biceps.png'),
-
+      ExerciseModel(muscleId: 5, name: 'Dumbbell Curl', image: 'assets/images/biceps.png'),
       // Triceps
-      ExerciseModel(muscleId: 5, name: 'Tricep Pushdown', image: 'assets/images/triceps.png'),
-      ExerciseModel(muscleId: 5, name: 'Overhead Tricep Extension', image: 'assets/images/triceps.png'),
-      ExerciseModel(muscleId: 5, name: 'Dips', image: 'assets/images/triceps.png'),
-
+      ExerciseModel(muscleId: 5, name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'),
+      ExerciseModel(muscleId: 5, name: 'Push-Down', image: 'assets/images/triceps.png'),
+      ExerciseModel(muscleId: 5, name: 'Rope Press Down', image: 'assets/images/triceps.png'),
       // Abdomen
-      ExerciseModel(muscleId: 6, name: 'Crunch', image: 'assets/images/abdomen.png'),
+      ExerciseModel(muscleId: 6, name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'),
+      ExerciseModel(muscleId: 6, name: 'Sit-Ups', image: 'assets/images/abdomen.png'),
       ExerciseModel(muscleId: 6, name: 'Leg Raise', image: 'assets/images/abdomen.png'),
+      ExerciseModel(muscleId: 6, name: 'Bar Leg Raise', image: 'assets/images/abdomen.png'),
       ExerciseModel(muscleId: 6, name: 'Plank', image: 'assets/images/abdomen.png'),
-
       // Glutes
+      ExerciseModel(muscleId: 7, name: 'Squat', image: 'assets/images/glutes.png'),
       ExerciseModel(muscleId: 7, name: 'Hip Thrust', image: 'assets/images/glutes.png'),
       ExerciseModel(muscleId: 7, name: 'Glute Kickback', image: 'assets/images/glutes.png'),
-      ExerciseModel(muscleId: 7, name: 'Squat', image: 'assets/images/glutes.png'),
-
       // Quadriceps
-      ExerciseModel(muscleId: 8, name: 'Squat', image: 'assets/images/quadriceps.png'),
       ExerciseModel(muscleId: 8, name: 'Leg Extension', image: 'assets/images/quadriceps.png'),
-      ExerciseModel(muscleId: 8, name: 'Lunge', image: 'assets/images/quadriceps.png'),
-
+      ExerciseModel(muscleId: 8, name: 'Dumbbell Lunges', image: 'assets/images/quadriceps.png'),
+      ExerciseModel(muscleId: 8, name: 'Hack Squat', image: 'assets/images/quadriceps.png'),
       // Hamstrings
       ExerciseModel(muscleId: 9, name: 'Romanian Deadlift', image: 'assets/images/hamstrings.png'),
       ExerciseModel(muscleId: 9, name: 'Leg Curl', image: 'assets/images/hamstrings.png'),
       ExerciseModel(muscleId: 9, name: 'Good Morning', image: 'assets/images/hamstrings.png'),
-
       // Calves
       ExerciseModel(muscleId: 10, name: 'Standing Calf Raise', image: 'assets/images/calves.png'),
       ExerciseModel(muscleId: 10, name: 'Seated Calf Raise', image: 'assets/images/calves.png'),
-      ExerciseModel(muscleId: 10, name: 'Donkey Calf Raise', image: 'assets/images/calves.png'),
     ];
 
     for (final exercise in exercises) {
