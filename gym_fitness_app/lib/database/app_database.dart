@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -77,11 +76,12 @@ class AppDatabase {
       MuscleModel(id: 3, name: 'Shoulders', image: 'assets/images/shoulders.png'),
       MuscleModel(id: 4, name: 'Biceps', image: 'assets/images/biceps.png'),
       MuscleModel(id: 5, name: 'Triceps', image: 'assets/images/triceps.png'),
-      MuscleModel(id: 6, name: 'Abdomen', image: 'assets/images/abdomen.png'),
-      MuscleModel(id: 7, name: 'Glutes', image: 'assets/images/glutes.png'),
-      MuscleModel(id: 8, name: 'Quadriceps', image: 'assets/images/quadriceps.png'),
-      MuscleModel(id: 9, name: 'Hamstrings', image: 'assets/images/hamstrings.png'),
-      MuscleModel(id: 10, name: 'Calves', image: 'assets/images/calves.png'),
+      MuscleModel(id: 6, name: 'Forearms', image: 'assets/images/forearms.png'),
+      MuscleModel(id: 7, name: 'Abdomen', image: 'assets/images/abdomen.png'),
+      MuscleModel(id: 8, name: 'Glutes', image: 'assets/images/glutes.png'),
+      MuscleModel(id: 9, name: 'Quadriceps', image: 'assets/images/quadriceps.png'),
+      MuscleModel(id: 10, name: 'Hamstrings', image: 'assets/images/hamstrings.png'),
+      MuscleModel(id: 11, name: 'Calves', image: 'assets/images/calves.png'),
     ];
 
     for (final muscle in muscles) {
@@ -114,9 +114,7 @@ class AppDatabase {
       // Biceps
       ExerciseModel(primaryMuscleIDs: [4], secondaryMuscleIDs: [1,6], name: 'Chin-Ups', image: 'assets/images/biceps.png'),
       ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Barbell Curl', image: 'assets/images/biceps.png'),
-      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Hammer Curl', image: 'assets/images/biceps.png'),
       ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Dumbbell Curl', image: 'assets/images/biceps.png'),
-      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Reverse Barbell Curl', image: 'assets/images/biceps.png'),
 
       // Triceps
       ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'),
@@ -124,7 +122,8 @@ class AppDatabase {
       ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Rope Press Down', image: 'assets/images/triceps.png'),
 
       // Forearms
-      // (Already included in bicep/tricep exercises as secondary/primary)
+      ExerciseModel(primaryMuscleIDs: [6, 4], secondaryMuscleIDs: [], name: 'Hammer Curl', image: 'assets/images/forearms.png'),
+      ExerciseModel(primaryMuscleIDs: [6, 4], secondaryMuscleIDs: [], name: 'Reverse Barbell Curl', image: 'assets/images/forearms.png'),
 
       // Abdomen
       ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'),
@@ -214,27 +213,34 @@ class AppDatabase {
 
     final result = muscles.map((m) {
       final muscleId = m['id'] as int;
-      final count = exercises.where((e) {
+
+      int primaryCount = 0;
+      int secondaryCount = 0;
+
+      for (final e in exercises) {
         final primary = parseMuscleIds(e['primary_muscle_ids'] as String?);
         final secondary = parseMuscleIds(e['secondary_muscle_ids'] as String?);
-        return primary.contains(muscleId) || secondary.contains(muscleId);
-      }).length;
 
-      return {...m, 'exercise_count': count};
+        if (primary.contains(muscleId)) primaryCount++;
+        if (secondary.contains(muscleId)) secondaryCount++;
+      }
+
+      return {
+        ...m,
+        'primary_count': primaryCount,
+        'secondary_count': secondaryCount,
+        'exercise_count': primaryCount + secondaryCount,
+      };
     }).toList();
 
     return result;
   }
 
   // ====== EXERCISES ======
-  Future<List<ExerciseModel>> getExercisesByMuscle(int muscleId) async {
+  Future<List<ExerciseModel>> getAllExercises() async {
     final db = await instance.database;
-    final maps = await db.query('exercises');
-    return maps
-        .map((e) => ExerciseModel.fromMap(e))
-        .where((ex) => ex.primaryMuscleIDs.contains(muscleId) ||
-        (ex.secondaryMuscleIDs?.contains(muscleId) ?? false))
-        .toList();
+    final result = await db.query('exercises'); // assuming your table is named 'exercises'
+    return result.map((map) => ExerciseModel.fromMap(map)).toList();
   }
 
   Future<int> insertExercise(ExerciseModel exercise) async {

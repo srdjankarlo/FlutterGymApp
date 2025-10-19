@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/app_database.dart';
 import '../models/exercise_model.dart';
-import '../models/muscle_model.dart';
 import 'exercises_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -252,7 +251,7 @@ class _MusclesPageState extends State<MusclesPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '${muscle['exercise_count']} exercises',
+                            'Primary: ${muscle['primary_count']}\nSecondary: ${muscle['secondary_count']}',
                             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                         ],

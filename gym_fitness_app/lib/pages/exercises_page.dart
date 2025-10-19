@@ -1,14 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:gym_fitness_app/pages/sets_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
 import '../database/app_database.dart';
 import '../models/exercise_model.dart';
 import '../models/muscle_model.dart';
-import 'sets_page.dart';
-import '../providers/unit_provider.dart';
-import 'package:provider/provider.dart';
 
 class ExercisesPage extends StatefulWidget {
   final int muscleId;
@@ -37,8 +35,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
   }
 
   void _loadExercises() {
-    _exercisesFuture =
-        AppDatabase.instance.getExercisesByMuscle(widget.muscleId);
+    // Get all exercises and we'll filter them manually for primary/secondary display
+    _exercisesFuture = AppDatabase.instance.getAllExercises();
   }
 
   void _loadAllMuscles() async {
@@ -71,8 +69,9 @@ class _ExercisesPageState extends State<ExercisesPage> {
     String? selectedImage = exercise.image;
 
     // Initialize muscle selection
-    List<int> selectedPrimary = exercise.primaryMuscleIDs;
-    List<int> selectedSecondary = exercise.secondaryMuscleIDs ?? [];
+    List<int> selectedPrimary = List.from(exercise.primaryMuscleIDs);
+    List<int> selectedSecondary =
+    List.from(exercise.secondaryMuscleIDs ?? []);
 
     // Load all muscles
     final muscleMaps = await AppDatabase.instance.getMusclesWithExerciseCount();
@@ -88,13 +87,12 @@ class _ExercisesPageState extends State<ExercisesPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name field
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Exercise name'),
+                    decoration:
+                    const InputDecoration(labelText: 'Exercise name'),
                   ),
                   const SizedBox(height: 10),
-                  // Image picker
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -120,7 +118,6 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // Primary muscle selector
                   Align(
                     alignment: Alignment.centerLeft,
                     child: const Text('Primary Muscles:',
@@ -149,7 +146,6 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     }).toList(),
                   ),
                   const SizedBox(height: 10),
-                  // Secondary muscle selector
                   Align(
                     alignment: Alignment.centerLeft,
                     child: const Text('Secondary Muscles:',
@@ -158,8 +154,10 @@ class _ExercisesPageState extends State<ExercisesPage> {
                   Wrap(
                     spacing: 8,
                     children: allMuscles.map((muscle) {
-                      final isSelected = selectedSecondary.contains(muscle.id);
-                      final isDisabled = selectedPrimary.contains(muscle.id);
+                      final isSelected =
+                      selectedSecondary.contains(muscle.id);
+                      final isDisabled =
+                      selectedPrimary.contains(muscle.id);
                       return FilterChip(
                         label: Text(muscle.name),
                         selected: isSelected,
@@ -194,7 +192,8 @@ class _ExercisesPageState extends State<ExercisesPage> {
                     id: exercise.id,
                     name: name,
                     primaryMuscleIDs: selectedPrimary,
-                    secondaryMuscleIDs: selectedSecondary.isEmpty ? null : selectedSecondary,
+                    secondaryMuscleIDs:
+                    selectedSecondary.isEmpty ? null : selectedSecondary,
                     image: selectedImage,
                   );
 
@@ -244,15 +243,98 @@ class _ExercisesPageState extends State<ExercisesPage> {
         (exerciseImage.startsWith('assets/') ||
             File(exerciseImage).existsSync())) {
       return exerciseImage.startsWith('assets/')
-          ? Image.asset(exerciseImage, width: 170, height: 120, fit: BoxFit.contain)
-          : Image.file(File(exerciseImage), width: 170, height: 170, fit: BoxFit.contain);
+          ? Image.asset(exerciseImage,
+          width: 170, height: 120, fit: BoxFit.contain)
+          : Image.file(File(exerciseImage),
+          width: 170, height: 170, fit: BoxFit.contain);
     } else {
-      return Image.asset(muscleImage, width: 170, height: 120, fit: BoxFit.contain);
+      return Image.asset(muscleImage,
+          width: 170, height: 120, fit: BoxFit.contain);
     }
+  }
+
+  Widget _buildExerciseCard(ExerciseModel exercise) {
+    return InkWell(
+      onTap: () {
+        if (exercise.id == null) return; // safety check
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => SetsPage(
+              exerciseId: exercise.id!,
+              exerciseName: exercise.name,
+              unitSetting: 'kg', // or use Provider if needed
+            ),
+          ),
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _buildExerciseImage(
+                  exercise.image,
+                  'assets/images/${widget.muscleName.toLowerCase()}.png',
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exercise.name,
+                      style: const TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    if (exercise.primaryMuscleIDs.isNotEmpty)
+                      Text(
+                        'Primary: ${_allMuscles.where((m) => exercise.primaryMuscleIDs.contains(m.id)).map((m) => m.name).join(', ')}',
+                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    if (exercise.secondaryMuscleIDs != null &&
+                        exercise.secondaryMuscleIDs!.isNotEmpty)
+                      Text(
+                        'Secondary: ${_allMuscles.where((m) => exercise.secondaryMuscleIDs!.contains(m.id)).map((m) => m.name).join(', ')}',
+                        style: const TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editExercise(exercise),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () =>
+                        _deleteExercise(exercise.id!, exercise.name),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.muscleName} Exercises'),
@@ -267,103 +349,61 @@ class _ExercisesPageState extends State<ExercisesPage> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final exercises = snapshot.data ?? [];
+          final allExercises = snapshot.data ?? [];
 
-          if (exercises.isEmpty) {
-            return const Center(child: Text('No exercises yet.'));
+          final primaryExercises = allExercises
+              .where((e) => e.primaryMuscleIDs.contains(widget.muscleId))
+              .toList();
+
+          final secondaryExercises = allExercises
+              .where((e) =>
+              (e.secondaryMuscleIDs ?? []).contains(widget.muscleId))
+              .toList();
+
+          if (primaryExercises.isEmpty && secondaryExercises.isEmpty) {
+            return const Center(child: Text('No exercises for this muscle yet.'));
           }
 
-          return ListView.builder(
-            itemCount: exercises.length,
-            itemBuilder: (context, index) {
-              final exercise = exercises[index];
-              return InkWell(
-                onTap: () {
-                  final unitProvider =
-                  Provider.of<UnitProvider>(context, listen: false);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SetsPage(
-                        exerciseId: exercise.id!,
-                        exerciseName: exercise.name,
-                        unitSetting: unitProvider.isMetric ? 'kg' : 'lbs',
-                      ),
-                    ),
-                  );
-                },
-                child: Card(
-                  margin:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: _buildExerciseImage(
-                            exercise.image,
-                            'assets/images/${widget.muscleName.toLowerCase()}.png',
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                exercise.name,
-                                style: const TextStyle(
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              // Primary muscles
-                              if (exercise.primaryMuscleIDs.isNotEmpty)
-                                Text(
-                                  'Primary: ${_allMuscles
-                                          .where((m) => exercise.primaryMuscleIDs.contains(m.id))
-                                          .map((m) => m.name)
-                                          .join(', ')}',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black54),
-                                ),
-                              // Secondary muscles
-                              if (exercise.secondaryMuscleIDs != null && exercise.secondaryMuscleIDs!.isNotEmpty)
-                                Text(
-                                  'Secondary: ${_allMuscles
-                                          .where((m) => exercise.secondaryMuscleIDs!.contains(m.id))
-                                          .map((m) => m.name)
-                                          .join(', ')}',
-                                  style: const TextStyle(fontSize: 16, color: Colors.black54),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () =>
-                                  _editExercise(exercise),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () =>
-                                  _deleteExercise(exercise.id!, exercise.name),
-                            ),
-                          ],
-                        ),
-                      ],
+          return ListView(
+            children: [
+              if (primaryExercises.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    'Primary Exercises',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
-              );
-            },
+                ...primaryExercises.map(_buildExerciseCard).toList(),
+              ],
+              if (secondaryExercises.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(
+                    thickness: 3,
+                    color: colorScheme.primary.withOpacity(0.7),
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Text(
+                    'Secondary Exercises',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.secondary,
+                    ),
+                  ),
+                ),
+                ...secondaryExercises.map(_buildExerciseCard).toList(),
+              ],
+            ],
           );
         },
       ),
