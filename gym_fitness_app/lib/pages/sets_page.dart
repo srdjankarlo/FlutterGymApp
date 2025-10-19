@@ -111,20 +111,17 @@ class _SetsPageState extends State<SetsPage> {
 
     if (setNum == null || weight == null || reps == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        const SnackBar(content: Text('Please fill set, weight and reps')),
       );
       return;
     }
 
-    // Save current timer values before resetting
     final workTimeToStore = _workSeconds;
     final restTimeToStore = _restSeconds;
 
-    // Stop timers
     _workTimer?.cancel();
     _restTimer?.cancel();
 
-    // Reset timers
     setState(() {
       _workSeconds = 0;
       _restSeconds = 0;
@@ -140,8 +137,8 @@ class _SetsPageState extends State<SetsPage> {
       setNumber: setNum,
       weight: weightToStore,
       reps: reps,
-      workTime: workTimeToStore, // use saved value
-      restTime: restTimeToStore, // use saved value
+      workTime: workTimeToStore,
+      restTime: restTimeToStore,
       timestamp: DateTime.now(),
     );
 
@@ -160,6 +157,12 @@ class _SetsPageState extends State<SetsPage> {
     return weightInKg;
   }
 
+  String formatSeconds(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   void dispose() {
     _workTimer?.cancel();
@@ -169,256 +172,269 @@ class _SetsPageState extends State<SetsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return Consumer<UnitProvider>(
-      builder: (context, unitProvider, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('${widget.exerciseName}: Input Set'),
-            actions: [
-              Builder(
-                builder: (context) =>
-                    IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () => Scaffold.of(context).openEndDrawer(),
-                    ),
-              ),
-            ],
-          ),
-          endDrawer: const SetsSettingsDrawer(),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        // Row 1: Workout timer
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _toggleTimer(isWork: true),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: Text(
-                                  _isWorkTimerRunning ? 'Stop Workout' : 'Start Workout',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('$_workSeconds s', style: const TextStyle(fontSize: 16)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _resetTimer(isWork: true),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: const Text('Reset', textAlign: TextAlign.center),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        // Row 2: Inputs for Set, Weight, Reps
-                        Row(
-                          children: [
-                            // Set number
-                            Flexible(
-                              flex: 2,
-                              child: TextField(
-                                controller: _setController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Set'),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Weight
-                            Flexible(
-                              flex: 5,
-                              child: TextField(
-                                controller: _weightController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(labelText: 'Weight ($_unit)'),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Reps
-                            Flexible(
-                              flex: 3,
-                              child: TextField(
-                                controller: _repsController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Reps'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        // Row 3: Rest timer
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _toggleTimer(isWork: false),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: Text(
-                                  _isRestTimerRunning ? 'Stop Rest' : 'Start Rest',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('$_restSeconds s', style: const TextStyle(fontSize: 16)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () => _resetTimer(isWork: false),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: const Text('Reset', textAlign: TextAlign.center),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        // Row 4: Input Set Data full width
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => _inputSetData(unitProvider),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text('Input Set Data'),
-                          ),
-                        ),
-                      ],
-                    ),
+        builder: (context, unitProvider, child) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('${widget.exerciseName}: Input Set'),
+              actions: [
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(context).openEndDrawer(),
                   ),
-                ),
-                FutureBuilder<List<SetModel>>(
-                  future: _setsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Text('No sets yet.');
-                    }
-
-                    final sets = snapshot.data!;
-                    return Column(
-                      children: sets.map((set) {
-                        return GestureDetector(
-                          onTap: () async {
-                            final result = await showDialog(
-                              context: context,
-                              builder: (_) => EditSetDialog(set: set, unit: _unit),
-                            );
-
-                            if (result == true) {
-                              _loadSets(); // refresh list if edited or deleted
-                            }
-                          },
-                          child: Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _infoBox('Set', set.setNumber.toString()),
-                                      _infoBox('Weight', '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit'),
-                                      _infoBox('Reps', set.reps.toString()),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _dateTimeBox(set.timestamp),
-                                      _infoBox('Workout', '${set.workTime}s'),
-                                      _infoBox('Rest', '${set.restTime}s'),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
                 ),
               ],
             ),
-          ),
-        );
-      }
-    );
-  }
+            endDrawer: const SetsSettingsDrawer(),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  // ===== Input Section =====
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          // Workout Timer Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _toggleTimer(isWork: true),
+                                  style: ElevatedButton.styleFrom(
+                                    padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: Text(
+                                    _isWorkTimerRunning
+                                        ? 'Stop Workout'
+                                        : 'Start Workout',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('$_workSeconds s',
+                                  style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _resetTimer(isWork: true),
+                                  style: ElevatedButton.styleFrom(
+                                    padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child:
+                                  const Text('Reset', textAlign: TextAlign.center),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Input Fields
+                          Row(
+                            children: [
+                              Flexible(
+                                flex: 2,
+                                child: TextField(
+                                  controller: _setController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(labelText: 'Set'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                flex: 5,
+                                child: TextField(
+                                  controller: _weightController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                      labelText: 'Weight ($_unit)'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                flex: 3,
+                                child: TextField(
+                                  controller: _repsController,
+                                  keyboardType: TextInputType.number,
+                                  decoration:
+                                  const InputDecoration(labelText: 'Reps'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Rest Timer Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _toggleTimer(isWork: false),
+                                  style: ElevatedButton.styleFrom(
+                                    padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: Text(
+                                    _isRestTimerRunning ? 'Stop Rest' : 'Start Rest',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('$_restSeconds s',
+                                  style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _resetTimer(isWork: false),
+                                  style: ElevatedButton.styleFrom(
+                                    padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child:
+                                  const Text('Reset', textAlign: TextAlign.center),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Input Set Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => _inputSetData(unitProvider),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: const Text('Input Set Data'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // ===== Blueprint Row with App Color Scheme =====
+                  Card(
+                    color: primaryColor.withOpacity(0.2),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: const [
+                              Expanded(child: Center(child: Text('Set'))),
+                              Expanded(child: Center(child: Text('Weight'))),
+                              Expanded(child: Center(child: Text('Reps'))),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: const [
+                              Expanded(child: Center(child: Text('Date'))),
+                              Expanded(child: Center(child: Text('Workout'))),
+                              Expanded(child: Center(child: Text('Rest'))),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // ===== Set Cards =====
+                  FutureBuilder<List<SetModel>>(
+                    future: _setsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Text('No sets yet.');
+                      }
 
-  Widget _infoBox(String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey),
-        ),
-        child: Column(
-          children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            const SizedBox(height: 2),
-            Text(value, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14)),
-          ],
-        ),
-      ),
-    );
-  }
+                      final sets = snapshot.data!;
+                      return Column(
+                        children: sets.map((set) {
+                          return GestureDetector(
+                            onTap: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (_) =>
+                                    EditSetDialog(set: set, unit: _unit),
+                              );
 
-  Widget _dateTimeBox(DateTime timestamp) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey),
-        ),
-        child: Column(
-          children: [
-            Text(
-              DateFormat('dd.MM.yyyy').format(timestamp), // date on top
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              if (result == true) {
+                                _loadSets();
+                              }
+                            },
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Column(
+                                  children: [
+                                    // Row 1: Set, Weight, Reps
+                                    Row(
+                                      children: [
+                                        _valueBox('Set: ${set.setNumber}'),
+                                        _valueBox(
+                                            '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit'),
+                                        _valueBox('${set.reps} Reps'),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Row 2: Date+Time, Workout, Rest
+                                    Row(
+                                      children: [
+                                        _valueBox(
+                                            '${DateFormat('dd.MM.yyyy').format(set.timestamp)}\n${DateFormat('HH:mm').format(set.timestamp)}'),
+                                        _valueBox('Work ${formatSeconds(set.workTime)}'),
+                                        _valueBox('Rest ${formatSeconds(set.restTime)}'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('HH:mm').format(timestamp), // time below
+          );
+        });
+  }
+
+  Widget _valueBox(String value) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey),
+        ),
+        child: Center(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14),
-            ),
-          ],
-        ),
+            )),
       ),
     );
   }
-
 }
