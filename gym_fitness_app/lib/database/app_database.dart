@@ -26,6 +26,10 @@ class AppDatabase {
     return await openDatabase(
       path,
       version: 1,
+      onConfigure: (db) async {
+        // Enable foreign keys for cascading deletes
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: _createDB,
     );
   }
@@ -36,7 +40,6 @@ class AppDatabase {
       CREATE TABLE muscles (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        description TEXT,
         image TEXT
       );
     ''');
@@ -45,14 +48,14 @@ class AppDatabase {
     await db.execute('''
       CREATE TABLE exercises (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        muscle_id INTEGER NOT NULL,
+        primary_muscle_ids TEXT NOT NULL,
         name TEXT NOT NULL,
         image TEXT,
-        FOREIGN KEY (muscle_id) REFERENCES muscles (id)
+        secondary_muscle_ids TEXT
       );
     ''');
 
-    // === Sets Table ===
+    // === Sets Table with CASCADE DELETE ===
     await db.execute('''
       CREATE TABLE sets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +66,7 @@ class AppDatabase {
         work_time INTEGER,
         rest_time INTEGER,
         timestamp TEXT NOT NULL,
-        FOREIGN KEY (exercise_id) REFERENCES exercises (id)
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
       );
     ''');
 
@@ -85,56 +88,69 @@ class AppDatabase {
       await db.insert('muscles', muscle.toMap());
     }
 
-    // === Pre-fill exercises (each uses its muscle image) ===
+    // === Pre-fill exercises ===
     final exercises = [
       // Back
-      ExerciseModel(muscleId: 1, name: 'Pull-Up', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Deadlifts', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Barbell Bent-over Row', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Dumbbell Shrugs', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Back Extensions', image: 'assets/images/back.png'),
-      ExerciseModel(muscleId: 1, name: 'Scapular Pull-Ups', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1], secondaryMuscleIDs: [4,5,6], name: 'Pull-Up', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1,10,9], secondaryMuscleIDs: [4,5,6], name: 'Deadlifts', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1], secondaryMuscleIDs: [4,5,6], name: 'Barbell Bent-over Row', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1,3], secondaryMuscleIDs: [4,6], name: 'Dumbbell Shrugs', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1,10], secondaryMuscleIDs: [], name: 'Back Extensions', image: 'assets/images/back.png'),
+      ExerciseModel(primaryMuscleIDs: [1], secondaryMuscleIDs: [4,6], name: 'Scapular Pull-Ups', image: 'assets/images/back.png'),
+
       // Chest
-      ExerciseModel(muscleId: 2, name: 'Push-Ups', image: 'assets/images/chest.png'),
-      ExerciseModel(muscleId: 2, name: 'Bench Press', image: 'assets/images/chest.png'),
-      ExerciseModel(muscleId: 2, name: 'Incline Press', image: 'assets/images/chest.png'),
-      ExerciseModel(muscleId: 2, name: 'Peck Deck Fly', image: 'assets/images/chest.png'),
+      ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Push-Ups', image: 'assets/images/chest.png'),
+      ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Bench Press', image: 'assets/images/chest.png'),
+      ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Incline Press', image: 'assets/images/chest.png'),
+      ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [6], name: 'Peck Deck Fly', image: 'assets/images/chest.png'),
+
       // Shoulders
-      ExerciseModel(muscleId: 3, name: 'Lateral Raise', image: 'assets/images/shoulders.png'),
-      ExerciseModel(muscleId: 3, name: 'Bent-Over Lateral Raise', image: 'assets/images/shoulders.png'),
-      ExerciseModel(muscleId: 3, name: 'Standing Front Press', image: 'assets/images/shoulders.png'),
-      ExerciseModel(muscleId: 3, name: 'Cable Lateral Raise', image: 'assets/images/shoulders.png'),
-      ExerciseModel(muscleId: 3, name: 'Standing Face Pull', image: 'assets/images/shoulders.png'),
+      ExerciseModel(primaryMuscleIDs: [3], secondaryMuscleIDs: [4,5,6], name: 'Lateral Raise', image: 'assets/images/shoulders.png'),
+      ExerciseModel(primaryMuscleIDs: [3,1], secondaryMuscleIDs: [6], name: 'Bent-Over Lateral Raise', image: 'assets/images/shoulders.png'),
+      ExerciseModel(primaryMuscleIDs: [3,2], secondaryMuscleIDs: [5,6], name: 'Standing Front Press', image: 'assets/images/shoulders.png'),
+      ExerciseModel(primaryMuscleIDs: [3,2], secondaryMuscleIDs: [6], name: 'Cable Lateral Raise', image: 'assets/images/shoulders.png'),
+      ExerciseModel(primaryMuscleIDs: [3,1], secondaryMuscleIDs: [6], name: 'Standing Face Pull', image: 'assets/images/shoulders.png'),
+
       // Biceps
-      ExerciseModel(muscleId: 5, name: 'Chin-Ups', image: 'assets/images/biceps.png'),
-      ExerciseModel(muscleId: 4, name: 'Barbell Curl', image: 'assets/images/biceps.png'),
-      ExerciseModel(muscleId: 4, name: 'Hammer Curl', image: 'assets/images/biceps.png'),
-      ExerciseModel(muscleId: 5, name: 'Dumbbell Curl', image: 'assets/images/biceps.png'),
+      ExerciseModel(primaryMuscleIDs: [4], secondaryMuscleIDs: [1,6], name: 'Chin-Ups', image: 'assets/images/biceps.png'),
+      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Barbell Curl', image: 'assets/images/biceps.png'),
+      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Hammer Curl', image: 'assets/images/biceps.png'),
+      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Dumbbell Curl', image: 'assets/images/biceps.png'),
+      ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Reverse Barbell Curl', image: 'assets/images/biceps.png'),
+
       // Triceps
-      ExerciseModel(muscleId: 5, name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'),
-      ExerciseModel(muscleId: 5, name: 'Push-Down', image: 'assets/images/triceps.png'),
-      ExerciseModel(muscleId: 5, name: 'Rope Press Down', image: 'assets/images/triceps.png'),
+      ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'),
+      ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Push-Down', image: 'assets/images/triceps.png'),
+      ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Rope Press Down', image: 'assets/images/triceps.png'),
+
+      // Forearms
+      // (Already included in bicep/tricep exercises as secondary/primary)
+
       // Abdomen
-      ExerciseModel(muscleId: 6, name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'),
-      ExerciseModel(muscleId: 6, name: 'Sit-Ups', image: 'assets/images/abdomen.png'),
-      ExerciseModel(muscleId: 6, name: 'Leg Raise', image: 'assets/images/abdomen.png'),
-      ExerciseModel(muscleId: 6, name: 'Bar Leg Raise', image: 'assets/images/abdomen.png'),
-      ExerciseModel(muscleId: 6, name: 'Plank', image: 'assets/images/abdomen.png'),
+      ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'),
+      ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Sit-Ups', image: 'assets/images/abdomen.png'),
+      ExerciseModel(primaryMuscleIDs: [7,9], secondaryMuscleIDs: [], name: 'Leg Raise', image: 'assets/images/abdomen.png'),
+      ExerciseModel(primaryMuscleIDs: [7,9], secondaryMuscleIDs: [], name: 'Bar Leg Raise', image: 'assets/images/abdomen.png'),
+      ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Plank', image: 'assets/images/abdomen.png'),
+
       // Glutes
-      ExerciseModel(muscleId: 7, name: 'Squat', image: 'assets/images/glutes.png'),
-      ExerciseModel(muscleId: 7, name: 'Hip Thrust', image: 'assets/images/glutes.png'),
-      ExerciseModel(muscleId: 7, name: 'Glute Kickback', image: 'assets/images/glutes.png'),
+      ExerciseModel(primaryMuscleIDs: [8,9], secondaryMuscleIDs: [10], name: 'Squat', image: 'assets/images/glutes.png'),
+      ExerciseModel(primaryMuscleIDs: [8,9], secondaryMuscleIDs: [], name: 'Hip Thrust', image: 'assets/images/glutes.png'),
+      ExerciseModel(primaryMuscleIDs: [8,10], secondaryMuscleIDs: [], name: 'Glute Kickback', image: 'assets/images/glutes.png'),
+
       // Quadriceps
-      ExerciseModel(muscleId: 8, name: 'Leg Extension', image: 'assets/images/quadriceps.png'),
-      ExerciseModel(muscleId: 8, name: 'Dumbbell Lunges', image: 'assets/images/quadriceps.png'),
-      ExerciseModel(muscleId: 8, name: 'Hack Squat', image: 'assets/images/quadriceps.png'),
+      ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [10], name: 'Leg Extension', image: 'assets/images/quadriceps.png'),
+      ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [10], name: 'Dumbbell Lunges', image: 'assets/images/quadriceps.png'),
+      ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [], name: 'Hack Squat', image: 'assets/images/quadriceps.png'),
+
       // Hamstrings
-      ExerciseModel(muscleId: 9, name: 'Romanian Deadlift', image: 'assets/images/hamstrings.png'),
-      ExerciseModel(muscleId: 9, name: 'Leg Curl', image: 'assets/images/hamstrings.png'),
-      ExerciseModel(muscleId: 9, name: 'Good Morning', image: 'assets/images/hamstrings.png'),
+      ExerciseModel(primaryMuscleIDs: [10,8], secondaryMuscleIDs: [9], name: 'Romanian Deadlift', image: 'assets/images/hamstrings.png'),
+      ExerciseModel(primaryMuscleIDs: [10], secondaryMuscleIDs: [8], name: 'Leg Curl', image: 'assets/images/hamstrings.png'),
+      ExerciseModel(primaryMuscleIDs: [10,8], secondaryMuscleIDs: [9], name: 'Good Morning', image: 'assets/images/hamstrings.png'),
+
       // Calves
-      ExerciseModel(muscleId: 10, name: 'Standing Calf Raise', image: 'assets/images/calves.png'),
-      ExerciseModel(muscleId: 10, name: 'Seated Calf Raise', image: 'assets/images/calves.png'),
+      ExerciseModel(primaryMuscleIDs: [11], secondaryMuscleIDs: [9,10], name: 'Standing Calf Raise', image: 'assets/images/calves.png'),
+      ExerciseModel(primaryMuscleIDs: [11], secondaryMuscleIDs: [9,10], name: 'Seated Calf Raise', image: 'assets/images/calves.png'),
     ];
 
     for (final exercise in exercises) {
@@ -154,7 +170,7 @@ class AppDatabase {
       'sets',
       where: 'exercise_id = ?',
       whereArgs: [exerciseId],
-      orderBy: 'timestamp DESC', // most recent first
+      orderBy: 'timestamp DESC',
     );
     return result.map((e) => SetModel.fromMap(e)).toList();
   }
@@ -179,26 +195,46 @@ class AppDatabase {
   }
 
   // ====== MUSCLES ======
+  List<int> parseMuscleIds(String? csv) {
+    if (csv == null || csv.trim().isEmpty) return [];
+    return csv
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .map(int.tryParse)
+        .whereType<int>()
+        .toList();
+  }
+
   Future<List<Map<String, dynamic>>> getMusclesWithExerciseCount() async {
     final db = await instance.database;
-    return await db.rawQuery('''
-      SELECT m.*, COUNT(e.id) AS exercise_count
-      FROM muscles m
-      LEFT JOIN exercises e ON m.id = e.muscle_id
-      GROUP BY m.id
-      ORDER BY m.id;
-    ''');
+
+    final muscles = await db.query('muscles');
+    final exercises = await db.query('exercises');
+
+    final result = muscles.map((m) {
+      final muscleId = m['id'] as int;
+      final count = exercises.where((e) {
+        final primary = parseMuscleIds(e['primary_muscle_ids'] as String?);
+        final secondary = parseMuscleIds(e['secondary_muscle_ids'] as String?);
+        return primary.contains(muscleId) || secondary.contains(muscleId);
+      }).length;
+
+      return {...m, 'exercise_count': count};
+    }).toList();
+
+    return result;
   }
 
   // ====== EXERCISES ======
   Future<List<ExerciseModel>> getExercisesByMuscle(int muscleId) async {
     final db = await instance.database;
-    final maps = await db.query(
-      'exercises',
-      where: 'muscle_id = ?',
-      whereArgs: [muscleId],
-    );
-    return maps.map((e) => ExerciseModel.fromMap(e)).toList();
+    final maps = await db.query('exercises');
+    return maps
+        .map((e) => ExerciseModel.fromMap(e))
+        .where((ex) => ex.primaryMuscleIDs.contains(muscleId) ||
+        (ex.secondaryMuscleIDs?.contains(muscleId) ?? false))
+        .toList();
   }
 
   Future<int> insertExercise(ExerciseModel exercise) async {
@@ -218,6 +254,7 @@ class AppDatabase {
 
   Future<int> deleteExercise(int id) async {
     final db = await instance.database;
+    // sets will be deleted automatically due to ON DELETE CASCADE
     return await db.delete(
       'exercises',
       where: 'id = ?',
@@ -228,8 +265,6 @@ class AppDatabase {
   // ====== CLOSE DATABASE ======
   Future<void> close() async {
     final db = _database;
-    if (db != null) {
-      await db.close();
-    }
+    if (db != null) await db.close();
   }
 }
