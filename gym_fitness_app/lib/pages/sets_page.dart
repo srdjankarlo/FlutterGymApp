@@ -224,35 +224,40 @@ class _SetsPageState extends State<SetsPage> {
                       child: Column(
                         children: [
                           // Workout Timer Row
+                          // Workout Timer Row
                           Row(
                             children: [
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _toggleTimer(isWork: true),
                                   style: ElevatedButton.styleFrom(
-                                    padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    backgroundColor: _isWorkTimerRunning
+                                        ? Colors.red   // 🔴 Stop = red
+                                        : Colors.green, // 🟢 Start = green
+                                    padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
-                                    _isWorkTimerRunning
-                                        ? 'Stop Workout'
-                                        : 'Start Workout',
+                                    _isWorkTimerRunning ? 'Stop Workout' : 'Start Workout',
                                     textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white, fontSize: 16),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(formatSeconds(_workSeconds)),
+                              _valueBox(formatSeconds(_workSeconds), 10, 25),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _resetTimer(isWork: true),
                                   style: ElevatedButton.styleFrom(
-                                    padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                    padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
-                                  child:
-                                  const Text('Reset', textAlign: TextAlign.center),
+                                  child: const Text(
+                                    'Reset',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                 ),
                               ),
                             ],
@@ -269,9 +274,10 @@ class _SetsPageState extends State<SetsPage> {
                                   textAlign: TextAlign.center,
                                   decoration: const InputDecoration(
                                     hintText: 'Set', // 👈 this text disappears when typing
+                                    hintStyle: TextStyle(fontSize: 25),
                                     border: OutlineInputBorder(),
                                     isDense: true, // compact spacing
-                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                                   ),
                                 ),
                               ),
@@ -284,9 +290,10 @@ class _SetsPageState extends State<SetsPage> {
                                   textAlign: TextAlign.center,
                                   decoration: InputDecoration(
                                     hintText: 'Weight ($_unit)', // 👈 dynamic placeholder
+                                    hintStyle: TextStyle(fontSize: 25),
                                     border: const OutlineInputBorder(),
                                     isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                                   ),
                                 ),
                               ),
@@ -299,9 +306,10 @@ class _SetsPageState extends State<SetsPage> {
                                   textAlign: TextAlign.center,
                                   decoration: const InputDecoration(
                                     hintText: 'Reps',
+                                    hintStyle: TextStyle(fontSize: 25),
                                     border: OutlineInputBorder(),
                                     isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                                   ),
                                 ),
                               ),
@@ -309,33 +317,40 @@ class _SetsPageState extends State<SetsPage> {
                           ),
                           const SizedBox(height: 4),
                           // Rest Timer Row
+                          // Rest Timer Row
                           Row(
                             children: [
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _toggleTimer(isWork: false),
                                   style: ElevatedButton.styleFrom(
-                                    padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    backgroundColor: _isRestTimerRunning
+                                        ? Colors.red   // 🔴 Stop = red
+                                        : Colors.green, // 🟢 Start = green
+                                    padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
                                     _isRestTimerRunning ? 'Stop Rest' : 'Start Rest',
                                     textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white, fontSize: 16),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(formatSeconds(_restSeconds)),
+                              _valueBox(formatSeconds(_restSeconds), 10, 25),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _resetTimer(isWork: false),
                                   style: ElevatedButton.styleFrom(
-                                    padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                    padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
-                                  child:
-                                  const Text('Reset', textAlign: TextAlign.center),
+                                  child: const Text(
+                                    'Reset',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                 ),
                               ),
                             ],
@@ -368,18 +383,18 @@ class _SetsPageState extends State<SetsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
-                              Expanded(child: Center(child: Text('Set'))),
-                              Expanded(child: Center(child: Text('Weight'))),
-                              Expanded(child: Center(child: Text('Reps'))),
+                              Flexible(flex: 1, child: Center(child: Text('Set'))),
+                              Flexible(flex: 2, child: Center(child: Text('Weight'))),
+                              Flexible(flex: 2, child: Center(child: Text('Reps'))),
                             ],
                           ),
                           const SizedBox(height: 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
-                              Expanded(child: Center(child: Text('Date'))),
-                              Expanded(child: Center(child: Text('Workout'))),
-                              Expanded(child: Center(child: Text('Rest'))),
+                              Flexible(flex: 2, child: Center(child: Text('Date'))),
+                              Flexible(flex: 1, child: Center(child: Text('Workout'))),
+                              Flexible(flex: 1, child: Center(child: Text('Rest'))),
                             ],
                           ),
                         ],
@@ -398,14 +413,17 @@ class _SetsPageState extends State<SetsPage> {
                       }
 
                       final sets = snapshot.data!;
+                      final scheme = Theme.of(context).colorScheme; // 👈 get color scheme
+
                       return Column(
                         children: sets.map((set) {
+                          final isNewWorkout = set.setNumber == 1; // 👈 condition
+
                           return GestureDetector(
                             onTap: () async {
                               final result = await showDialog(
                                 context: context,
-                                builder: (_) =>
-                                    EditSetDialog(set: set, unit: _unit),
+                                builder: (_) => EditSetDialog(set: set, unit: _unit),
                               );
 
                               if (result == true) {
@@ -414,29 +432,45 @@ class _SetsPageState extends State<SetsPage> {
                             },
                             child: Card(
                               margin: const EdgeInsets.symmetric(vertical: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                               child: Padding(
-                                padding: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(2),
                                 child: Column(
                                   children: [
                                     // Row 1: Set, Weight, Reps
                                     Row(
                                       children: [
-                                        _valueBox('${set.setNumber}'),
-                                        _valueBox(
-                                            '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit'),
-                                        _valueBox('${set.reps}'),
+                                        Flexible(flex: 1, child: _valueBox('${set.setNumber}', 4, 13)),
+                                        Flexible(flex: 2, child: _valueBox(
+                                            '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
+                                        Flexible(flex: 2, child: _valueBox('${set.reps}', 4, 13)),
                                       ],
                                     ),
                                     const SizedBox(height: 2),
+
                                     // Row 2: Date+Time, Workout, Rest
                                     Row(
                                       children: [
-                                        _valueBox(
-                                            '${DateFormat('dd.MM.yyyy').format(set.timestamp)}\n${DateFormat('HH:mm').format(set.timestamp)}'),
-                                        _valueBox(formatSeconds(set.workTime)),
-                                        _valueBox(formatSeconds(set.restTime)),
+                                        Flexible(flex: 2, child: _valueBox(
+                                            '${DateFormat('dd.MM.yyyy').format(set.timestamp)} - ${DateFormat('HH:mm:ss').format(set.timestamp)}', 4, 13)),
+                                        Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
+                                        Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
                                       ],
                                     ),
+
+                                    // 👇 Add colored line when setNumber == 1
+                                    if (isNewWorkout)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        height: 3,
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: scheme.primary, // 👈 from color scheme
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -453,23 +487,21 @@ class _SetsPageState extends State<SetsPage> {
         });
   }
 
-  Widget _valueBox(String value) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey),
-        ),
-        child: Center(
-            child: Text(
-              value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13),
-            )),
+  Widget _valueBox(String value, double verticalPad, double fontSize) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+      padding: EdgeInsets.symmetric(vertical: verticalPad),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey),
       ),
+      child: Center(
+          child: Text(
+            value,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: fontSize),
+          )),
     );
   }
 }
