@@ -105,13 +105,33 @@ class _SetsPageState extends State<SetsPage> {
   }
 
   Future<void> _inputSetData(UnitProvider unitProvider) async {
-    final setNum = int.tryParse(_setController.text.trim());
-    final weight = double.tryParse(_weightController.text.trim());
-    final reps = int.tryParse(_repsController.text.trim());
+    final setText = _setController.text.trim();
+    final repsText = _repsController.text.trim();
+    final weightText = _weightController.text.trim();
 
-    if (setNum == null || weight == null || reps == null) {
+    bool hasError = false;
+
+    if (setText.isEmpty) {
+      hasError = true;
+    }
+    if (repsText.isEmpty) {
+      hasError = true;
+    }
+
+    if (hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill set, weight and reps')),
+        const SnackBar(content: Text('Please fill in Set and Reps')),
+      );
+      return;
+    }
+
+    final setNum = int.tryParse(setText);
+    final reps = int.tryParse(repsText);
+    final weight = double.tryParse(weightText) ?? 0; // default 0 if empty
+
+    if (setNum! < 1 || reps! < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid input. Set and Reps must be at least 1')),
       );
       return;
     }
@@ -152,6 +172,7 @@ class _SetsPageState extends State<SetsPage> {
     });
   }
 
+
   double _displayWeight(double weightInKg) {
     if (_unit == 'lbs') return weightInKg * 2.20462;
     return weightInKg;
@@ -172,7 +193,7 @@ class _SetsPageState extends State<SetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryColor = Theme.of(context).colorScheme.secondary;
     return Consumer<UnitProvider>(
         builder: (context, unitProvider, child) {
           return Scaffold(
@@ -189,7 +210,7 @@ class _SetsPageState extends State<SetsPage> {
             ),
             endDrawer: const SetsSettingsDrawer(),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
                   // ===== Input Section =====
@@ -197,9 +218,9 @@ class _SetsPageState extends State<SetsPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: const EdgeInsets.only(bottom: 8),
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       child: Column(
                         children: [
                           // Workout Timer Row
@@ -210,7 +231,7 @@ class _SetsPageState extends State<SetsPage> {
                                   onPressed: () => _toggleTimer(isWork: true),
                                   style: ElevatedButton.styleFrom(
                                     padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
+                                    const EdgeInsets.symmetric(vertical: 12),
                                   ),
                                   child: Text(
                                     _isWorkTimerRunning
@@ -220,16 +241,15 @@ class _SetsPageState extends State<SetsPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Text('$_workSeconds s',
-                                  style: const TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
+                              _valueBox(formatSeconds(_workSeconds)),
+                              const SizedBox(width: 4),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _resetTimer(isWork: true),
                                   style: ElevatedButton.styleFrom(
                                     padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
+                                    const EdgeInsets.symmetric(vertical: 12),
                                   ),
                                   child:
                                   const Text('Reset', textAlign: TextAlign.center),
@@ -237,7 +257,7 @@ class _SetsPageState extends State<SetsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           // Input Fields
                           Row(
                             children: [
@@ -246,32 +266,48 @@ class _SetsPageState extends State<SetsPage> {
                                 child: TextField(
                                   controller: _setController,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: 'Set'),
+                                  textAlign: TextAlign.center,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Set', // 👈 this text disappears when typing
+                                    border: OutlineInputBorder(),
+                                    isDense: true, // compact spacing
+                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               Flexible(
                                 flex: 5,
                                 child: TextField(
                                   controller: _weightController,
                                   keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
                                   decoration: InputDecoration(
-                                      labelText: 'Weight ($_unit)'),
+                                    hintText: 'Weight ($_unit)', // 👈 dynamic placeholder
+                                    border: const OutlineInputBorder(),
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               Flexible(
                                 flex: 3,
                                 child: TextField(
                                   controller: _repsController,
                                   keyboardType: TextInputType.number,
-                                  decoration:
-                                  const InputDecoration(labelText: 'Reps'),
+                                  textAlign: TextAlign.center,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Reps',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           // Rest Timer Row
                           Row(
                             children: [
@@ -280,7 +316,7 @@ class _SetsPageState extends State<SetsPage> {
                                   onPressed: () => _toggleTimer(isWork: false),
                                   style: ElevatedButton.styleFrom(
                                     padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
+                                    const EdgeInsets.symmetric(vertical: 12),
                                   ),
                                   child: Text(
                                     _isRestTimerRunning ? 'Stop Rest' : 'Start Rest',
@@ -288,16 +324,15 @@ class _SetsPageState extends State<SetsPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Text('$_restSeconds s',
-                                  style: const TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
+                              _valueBox(formatSeconds(_restSeconds)),
+                              const SizedBox(width: 4),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () => _resetTimer(isWork: false),
                                   style: ElevatedButton.styleFrom(
                                     padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
+                                    const EdgeInsets.symmetric(vertical: 12),
                                   ),
                                   child:
                                   const Text('Reset', textAlign: TextAlign.center),
@@ -305,7 +340,7 @@ class _SetsPageState extends State<SetsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           // Input Set Button
                           SizedBox(
                             width: double.infinity,
@@ -322,12 +357,12 @@ class _SetsPageState extends State<SetsPage> {
                       ),
                     ),
                   ),
-                  // ===== Blueprint Row with App Color Scheme =====
+                  // ===== Blueprint Row =====
                   Card(
-                    color: primaryColor.withOpacity(0.2),
-                    margin: const EdgeInsets.only(bottom: 8),
+                    color: primaryColor,
+                    margin: const EdgeInsets.only(bottom: 4),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                       child: Column(
                         children: [
                           Row(
@@ -338,7 +373,7 @@ class _SetsPageState extends State<SetsPage> {
                               Expanded(child: Center(child: Text('Reps'))),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
@@ -378,28 +413,28 @@ class _SetsPageState extends State<SetsPage> {
                               }
                             },
                             child: Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              margin: const EdgeInsets.symmetric(vertical: 2),
                               child: Padding(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(4),
                                 child: Column(
                                   children: [
                                     // Row 1: Set, Weight, Reps
                                     Row(
                                       children: [
-                                        _valueBox('Set: ${set.setNumber}'),
+                                        _valueBox('${set.setNumber}'),
                                         _valueBox(
                                             '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit'),
-                                        _valueBox('${set.reps} Reps'),
+                                        _valueBox('${set.reps}'),
                                       ],
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     // Row 2: Date+Time, Workout, Rest
                                     Row(
                                       children: [
                                         _valueBox(
                                             '${DateFormat('dd.MM.yyyy').format(set.timestamp)}\n${DateFormat('HH:mm').format(set.timestamp)}'),
-                                        _valueBox('Work ${formatSeconds(set.workTime)}'),
-                                        _valueBox('Rest ${formatSeconds(set.restTime)}'),
+                                        _valueBox(formatSeconds(set.workTime)),
+                                        _valueBox(formatSeconds(set.restTime)),
                                       ],
                                     ),
                                   ],
@@ -421,8 +456,8 @@ class _SetsPageState extends State<SetsPage> {
   Widget _valueBox(String value) {
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           color: Colors.grey[200],
           borderRadius: BorderRadius.circular(6),
@@ -432,7 +467,7 @@ class _SetsPageState extends State<SetsPage> {
             child: Text(
               value,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 13),
             )),
       ),
     );
