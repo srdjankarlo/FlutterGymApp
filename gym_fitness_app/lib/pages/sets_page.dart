@@ -224,7 +224,6 @@ class _SetsPageState extends State<SetsPage> {
                       child: Column(
                         children: [
                           // Workout Timer Row
-                          // Workout Timer Row
                           Row(
                             children: [
                               Expanded(
@@ -262,7 +261,7 @@ class _SetsPageState extends State<SetsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 15),
                           // Input Fields
                           Row(
                             children: [
@@ -272,6 +271,7 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _setController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 25),
                                   decoration: const InputDecoration(
                                     hintText: 'Set', // 👈 this text disappears when typing
                                     hintStyle: TextStyle(fontSize: 25),
@@ -288,6 +288,7 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _weightController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 25),
                                   decoration: InputDecoration(
                                     hintText: 'Weight ($_unit)', // 👈 dynamic placeholder
                                     hintStyle: TextStyle(fontSize: 25),
@@ -304,6 +305,7 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _repsController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 25),
                                   decoration: const InputDecoration(
                                     hintText: 'Reps',
                                     hintStyle: TextStyle(fontSize: 25),
@@ -315,8 +317,7 @@ class _SetsPageState extends State<SetsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          // Rest Timer Row
+                          const SizedBox(height: 15),
                           // Rest Timer Row
                           Row(
                             children: [
@@ -355,7 +356,7 @@ class _SetsPageState extends State<SetsPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 15),
                           // Input Set Button
                           SizedBox(
                             width: double.infinity,
@@ -431,6 +432,7 @@ class _SetsPageState extends State<SetsPage> {
                               }
                             },
                             child: Card(
+                              color: primaryColor,
                               margin: const EdgeInsets.symmetric(vertical: 2),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6),
@@ -464,7 +466,7 @@ class _SetsPageState extends State<SetsPage> {
                                     if (isNewWorkout)
                                       Container(
                                         margin: const EdgeInsets.only(top: 4),
-                                        height: 3,
+                                        height: 7,
                                         width: double.infinity,
                                         decoration: BoxDecoration(
                                           color: scheme.primary, // 👈 from color scheme
