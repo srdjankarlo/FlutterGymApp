@@ -58,8 +58,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     final dir = await getApplicationDocumentsDirectory();
     final fileName = 'exercise_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final filePath = '${dir.path}/$fileName';
-    final file =
-    File(filePath)..writeAsBytesSync(img.encodeJpg(resized, quality: 85));
+    File(filePath).writeAsBytesSync(img.encodeJpg(resized, quality: 85));
 
     return filePath;
   }

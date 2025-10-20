@@ -105,36 +105,61 @@ class _EditSetDialogState extends State<EditSetDialog> {
   @override
   Widget build(BuildContext context) {
     final unitProvider = Provider.of<UnitProvider>(context, listen: false);
+    final scheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
-      title: const Text('Edit Set'),
+      backgroundColor: scheme.surface, // 👈 Matches your app surface color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      title: Text(
+        'Edit Set',
+        style: TextStyle(
+          color: scheme.onSurface, // makes title visible on dark/light themes
+        ),
+      ),
       content: SingleChildScrollView(
         child: Column(
           children: [
             TextField(
               controller: _setController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Set Number'),
+              decoration: InputDecoration(
+                labelText: 'Set Number',
+                labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: _weightController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Weight (${widget.unit})'),
+              decoration: InputDecoration(
+                labelText: 'Weight (${widget.unit})',
+                labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: _repsController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Reps'),
+              decoration: InputDecoration(
+                labelText: 'Reps',
+                labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: _workController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Work Time (mm:ss)'),
+              decoration: InputDecoration(
+                labelText: 'Work Time (mm:ss)',
+                labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             ),
             TextField(
               controller: _restController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Rest Time (mm:ss)'),
+              decoration: InputDecoration(
+                labelText: 'Rest Time (mm:ss)',
+                labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
             ),
           ],
         ),
@@ -142,9 +167,16 @@ class _EditSetDialogState extends State<EditSetDialog> {
       actions: [
         TextButton(
           onPressed: _deleteSet,
-          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          child: Text(
+            'Delete',
+            style: TextStyle(color: scheme.error),
+          ),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+          ),
           onPressed: () => _saveSet(unitProvider),
           child: const Text('Save'),
         ),

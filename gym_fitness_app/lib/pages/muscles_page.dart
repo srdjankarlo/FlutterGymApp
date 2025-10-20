@@ -37,12 +37,9 @@ class _MusclesPageState extends State<MusclesPage> {
     final image = img.decodeImage(bytes);
     if (image == null) return null;
 
-    final resized = img.copyResize(image, width: 512);
-
     final dir = await getApplicationDocumentsDirectory();
     final fileName = 'exercise_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final filePath = '${dir.path}/$fileName';
-    final file = File(filePath)..writeAsBytesSync(img.encodeJpg(resized, quality: 85));
 
     return filePath;
   }

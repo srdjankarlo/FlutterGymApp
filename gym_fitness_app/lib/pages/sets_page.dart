@@ -127,7 +127,8 @@ class _SetsPageState extends State<SetsPage> {
 
     final setNum = int.tryParse(setText);
     final reps = int.tryParse(repsText);
-    final weight = double.tryParse(weightText) ?? 0; // default 0 if empty
+    double weight = double.tryParse(weightText) ?? 0;
+    if (weight == 0) weight = 1;
 
     if (setNum! < 1 || reps! < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -194,6 +195,7 @@ class _SetsPageState extends State<SetsPage> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.secondary;
+    final surfaceColor = Theme.of(context).colorScheme.surface;
     return Consumer<UnitProvider>(
         builder: (context, unitProvider, child) {
           return Scaffold(
@@ -219,6 +221,7 @@ class _SetsPageState extends State<SetsPage> {
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
                     margin: const EdgeInsets.only(bottom: 8),
+                    color: surfaceColor,
                     child: Padding(
                       padding: const EdgeInsets.all(8),
                       child: Column(
@@ -231,8 +234,8 @@ class _SetsPageState extends State<SetsPage> {
                                   onPressed: () => _toggleTimer(isWork: true),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _isWorkTimerRunning
-                                        ? Colors.red   // 🔴 Stop = red
-                                        : Colors.green, // 🟢 Start = green
+                                        ? Colors.red   // Stop = red
+                                        : Colors.green, // Start = green
                                     padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
@@ -273,7 +276,7 @@ class _SetsPageState extends State<SetsPage> {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(fontSize: 25),
                                   decoration: const InputDecoration(
-                                    hintText: 'Set', // 👈 this text disappears when typing
+                                    hintText: 'Set', // this text disappears when typing
                                     hintStyle: TextStyle(fontSize: 25),
                                     border: OutlineInputBorder(),
                                     isDense: true, // compact spacing
@@ -290,7 +293,7 @@ class _SetsPageState extends State<SetsPage> {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(fontSize: 25),
                                   decoration: InputDecoration(
-                                    hintText: 'Weight ($_unit)', // 👈 dynamic placeholder
+                                    hintText: 'Weight ($_unit)', // dynamic placeholder
                                     hintStyle: TextStyle(fontSize: 25),
                                     border: const OutlineInputBorder(),
                                     isDense: true,
@@ -326,8 +329,8 @@ class _SetsPageState extends State<SetsPage> {
                                   onPressed: () => _toggleTimer(isWork: false),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _isRestTimerRunning
-                                        ? Colors.red   // 🔴 Stop = red
-                                        : Colors.green, // 🟢 Start = green
+                                        ? Colors.red   // Stop = red
+                                        : Colors.green, // Start = green
                                     padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
@@ -414,67 +417,114 @@ class _SetsPageState extends State<SetsPage> {
                       }
 
                       final sets = snapshot.data!;
-                      final scheme = Theme.of(context).colorScheme; // 👈 get color scheme
+                      final scheme = Theme.of(context).colorScheme;
+                      final primaryColor = scheme.primaryContainer;
 
+                      // Group sets by date (yyyy-MM-dd)
+                      final Map<String, List<SetModel>> grouped = {};
+                      for (final set in sets) {
+                        final dateKey = DateFormat('yyyy-MM-dd').format(set.timestamp);
+                        grouped.putIfAbsent(dateKey, () => []).add(set);
+                      }
+
+                      // Sort the groups by date (descending)
+                      final sortedDates = grouped.keys.toList()
+                        ..sort((a, b) => b.compareTo(a));
+
+                      // Build collapsible grouped list
                       return Column(
-                        children: sets.map((set) {
-                          final isNewWorkout = set.setNumber == 1; // 👈 condition
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: sortedDates.map((dateKey) {
+                          final dateSets = grouped[dateKey]!;
+                          final displayDate =
+                          DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
 
-                          return GestureDetector(
-                            onTap: () async {
-                              final result = await showDialog(
-                                context: context,
-                                builder: (_) => EditSetDialog(set: set, unit: _unit),
-                              );
+                          // Calculate total sets, reps, volume for this date
+                          int totalSets = dateSets.length;
+                          int totalReps = dateSets.fold(0, (sum, set) => sum + set.reps);
+                          double totalVolume = dateSets.fold(0.0, (sum, set) {
+                            double weight = set.weight;
+                            if (weight == 0) weight = 1; // treat bodyweight as 1 for now
+                            return sum + (weight * set.reps);
+                          });
 
-                              if (result == true) {
-                                _loadSets();
-                              }
-                            },
-                            child: Card(
-                              color: primaryColor,
-                              margin: const EdgeInsets.symmetric(vertical: 2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(2),
-                                child: Column(
+                          return Card(
+                            color: scheme.surfaceContainerHighest,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            elevation: 3,
+                            child: Theme(
+                              // 👇 Make the tile background match color scheme
+                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                initiallyExpanded: true, // 👈 expand by default (optional)
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Row 1: Set, Weight, Reps
-                                    Row(
-                                      children: [
-                                        Flexible(flex: 1, child: _valueBox('${set.setNumber}', 4, 13)),
-                                        Flexible(flex: 2, child: _valueBox(
-                                            '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
-                                        Flexible(flex: 2, child: _valueBox('${set.reps}', 4, 13)),
-                                      ],
+                                    Text(
+                                      displayDate,
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: scheme.primary,
+                                      ),
                                     ),
                                     const SizedBox(height: 2),
-
-                                    // Row 2: Date+Time, Workout, Rest
-                                    Row(
-                                      children: [
-                                        Flexible(flex: 2, child: _valueBox(
-                                            '${DateFormat('dd.MM.yyyy').format(set.timestamp)} - ${DateFormat('HH:mm:ss').format(set.timestamp)}', 4, 13)),
-                                        Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
-                                        Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
-                                      ],
-                                    ),
-
-                                    // 👇 Add colored line when setNumber == 1
-                                    if (isNewWorkout)
-                                      Container(
-                                        margin: const EdgeInsets.only(top: 4),
-                                        height: 7,
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                          color: scheme.primary, // 👈 from color scheme
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
+                                    Text(
+                                      'Sets: $totalSets  Volume: ${totalVolume.toStringAsFixed(1)} $_unit  Reps: $totalReps',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: scheme.onSurfaceVariant,
                                       ),
+                                    ),
                                   ],
                                 ),
+                                children: dateSets.map((set) {
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      final result = await showDialog(
+                                        context: context,
+                                        builder: (_) => EditSetDialog(set: set, unit: _unit),
+                                      );
+                                      if (result == true) {
+                                        _loadSets();
+                                      }
+                                    },
+                                    child: Card(
+                                      color: primaryColor,
+                                      margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4),
+                                        child: Column(
+                                          children: [
+                                            // Row 1: Set, Weight, Reps
+                                            Row(
+                                              children: [
+                                                Flexible(flex: 1, child: _valueBox('${set.setNumber}', 4, 13)),
+                                                Flexible(flex: 2, child: _valueBox(
+                                                    '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
+                                                Flexible(flex: 2, child: _valueBox('${set.reps}', 4, 13)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 2),
+                                            // Row 2: Time, Work, Rest
+                                            Row(
+                                              children: [
+                                                Flexible(flex: 2, child: _valueBox(
+                                                    DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
                           );

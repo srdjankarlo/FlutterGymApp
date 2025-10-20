@@ -18,7 +18,7 @@ const warmColorScheme = ColorScheme.light(
 
 const maxContrastScheme = ColorScheme.light(
   primary: Colors.black,
-  secondary: Colors.black,
+  secondary: Colors.grey,
   onPrimary: Colors.white,
   onSurface: Colors.black
 );
