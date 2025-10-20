@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gym_fitness_app/pages/muscles_page.dart';
 import '../widgets/settings_drawer.dart';
+import 'exercise_log_page.dart';
 
 class StartingPage extends StatelessWidget {
   const StartingPage({super.key});
@@ -44,7 +45,13 @@ class StartingPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(builder: (context) => MusclesPage()),
                     );
-                  } else {
+                  } else if (item == 'Exercise Log') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ExerciseLogPage()),
+                    );
+                  }
+                  else {
                     // Placeholder for other pages
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('$item page not implemented yet')),

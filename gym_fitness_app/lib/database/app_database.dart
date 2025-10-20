@@ -174,6 +174,12 @@ class AppDatabase {
     return result.map((e) => SetModel.fromMap(e)).toList();
   }
 
+  Future<List<SetModel>> getAllSets() async {
+    final db = await database;
+    final maps = await db.query('sets');
+    return maps.map((map) => SetModel.fromMap(map)).toList();
+  }
+
   Future<int> updateSet(SetModel set) async {
     final db = await instance.database;
     return await db.update(

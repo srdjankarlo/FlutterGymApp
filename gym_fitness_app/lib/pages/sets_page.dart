@@ -388,17 +388,56 @@ class _SetsPageState extends State<SetsPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
                               Flexible(flex: 1, child: Center(child: Text('Set'))),
-                              Flexible(flex: 2, child: Center(child: Text('Weight'))),
-                              Flexible(flex: 2, child: Center(child: Text('Reps'))),
+                              Flexible(flex: 1, child: Center(child: Text('Weight'))),
+                              Flexible(flex: 1, child: Center(child: Text('Reps'))),
                             ],
                           ),
                           const SizedBox(height: 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
-                              Flexible(flex: 2, child: Center(child: Text('Date'))),
-                              Flexible(flex: 1, child: Center(child: Text('Workout'))),
-                              Flexible(flex: 1, child: Center(child: Text('Rest'))),
+                              Flexible(
+                                flex: 1,
+                                child:
+                                  Center(
+                                    child:
+                                      Text(
+                                        'Date',
+                                        style:
+                                          TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                      )
+                                  )
+                              ),
+                              Flexible(
+                                flex: 1,
+                                child:
+                                  Center(
+                                    child:
+                                      Text(
+                                        'Workout',
+                                        style:
+                                          TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                      )
+                                  )
+                              ),
+                              Flexible(
+                                flex: 1,
+                                child:
+                                  Center(
+                                    child:
+                                      Text(
+                                        'Rest',
+                                        style:
+                                          TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                      )
+                                  )
+                              ),
                             ],
                           ),
                         ],
@@ -439,7 +478,7 @@ class _SetsPageState extends State<SetsPage> {
                           final displayDate =
                           DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
 
-                          // Calculate total sets, reps, volume for this date
+                          // Calculate total sets, reps, and volume for this date
                           int totalSets = dateSets.length;
                           int totalReps = dateSets.fold(0, (sum, set) => sum + set.reps);
                           double totalVolume = dateSets.fold(0.0, (sum, set) {
@@ -448,34 +487,121 @@ class _SetsPageState extends State<SetsPage> {
                             return sum + (weight * set.reps);
                           });
 
+                          // Calculate total work and rest time (in seconds)
+                          int totalWork = dateSets.fold(0, (sum, set) => sum + set.workTime);
+                          int totalRest = dateSets.fold(0, (sum, set) => sum + set.restTime);
+                          int totalTime = totalWork + totalRest;
+
+                          // Helper to format seconds as mm:ss
+                          String formatTime(int seconds) {
+                            final m = (seconds ~/ 60).toString().padLeft(2, '0');
+                            final s = (seconds % 60).toString().padLeft(2, '0');
+                            return '$m:$s';
+                          }
+
                           return Card(
                             color: scheme.surfaceContainerHighest,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             margin: const EdgeInsets.symmetric(vertical: 6),
                             elevation: 3,
                             child: Theme(
-                              // 👇 Make the tile background match color scheme
+                              // Make the tile background match color scheme
                               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                               child: ExpansionTile(
-                                initiallyExpanded: true, // 👈 expand by default (optional)
+                                initiallyExpanded: true, // expand by default (optional)
                                 title: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Text(
-                                      displayDate,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: scheme.primary,
+                                    // DATE centered
+                                    Center(
+                                      child: Text(
+                                        displayDate,
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: scheme.primary,
+                                        ),
                                       ),
                                     ),
+                                    const SizedBox(height: 6),
+
+                                    // ROW 1: Sets / Volume / Reps
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            'Sets: $totalSets',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            'Volume: ${totalVolume.toStringAsFixed(1)} $_unit',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            'Reps: $totalReps',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      'Sets: $totalSets  Volume: ${totalVolume.toStringAsFixed(1)} $_unit  Reps: $totalReps',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: scheme.onSurfaceVariant,
-                                      ),
+
+                                    // ROW 2: Work / Rest / Total
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            'Work: ${formatSeconds(totalWork)}',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            'Rest: ${formatSeconds(totalRest)}',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            'Total: ${formatSeconds(totalWork + totalRest)}',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -504,16 +630,16 @@ class _SetsPageState extends State<SetsPage> {
                                             Row(
                                               children: [
                                                 Flexible(flex: 1, child: _valueBox('${set.setNumber}', 4, 13)),
-                                                Flexible(flex: 2, child: _valueBox(
+                                                Flexible(flex: 1, child: _valueBox(
                                                     '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
-                                                Flexible(flex: 2, child: _valueBox('${set.reps}', 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox('${set.reps}', 4, 13)),
                                               ],
                                             ),
                                             const SizedBox(height: 2),
                                             // Row 2: Time, Work, Rest
                                             Row(
                                               children: [
-                                                Flexible(flex: 2, child: _valueBox(
+                                                Flexible(flex: 1, child: _valueBox(
                                                     DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
                                                 Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
                                                 Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
