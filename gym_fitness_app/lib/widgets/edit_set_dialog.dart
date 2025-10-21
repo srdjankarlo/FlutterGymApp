@@ -94,12 +94,12 @@ class _EditSetDialogState extends State<EditSetDialog> {
     );
 
     await AppDatabase.instance.updateSet(updatedSet);
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(updatedSet);
   }
 
   Future<void> _deleteSet() async {
     await AppDatabase.instance.deleteSet(widget.set.id!);
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(null);
   }
 
   @override

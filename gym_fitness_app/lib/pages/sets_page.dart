@@ -180,9 +180,16 @@ class _SetsPageState extends State<SetsPage> {
   }
 
   String formatSeconds(int totalSeconds) {
-    final minutes = totalSeconds ~/ 60;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final twoDigits = (int n) => n.toString().padLeft(2, '0');
+
+    if (hours > 0) {
+      return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
+    } else {
+      return '${twoDigits(minutes)}:${twoDigits(seconds)}';
+    }
   }
 
   @override
@@ -396,48 +403,9 @@ class _SetsPageState extends State<SetsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
-                              Flexible(
-                                flex: 1,
-                                child:
-                                  Center(
-                                    child:
-                                      Text(
-                                        'Date',
-                                        style:
-                                          TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      )
-                                  )
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child:
-                                  Center(
-                                    child:
-                                      Text(
-                                        'Workout',
-                                        style:
-                                          TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      )
-                                  )
-                              ),
-                              Flexible(
-                                flex: 1,
-                                child:
-                                  Center(
-                                    child:
-                                      Text(
-                                        'Rest',
-                                        style:
-                                          TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      )
-                                  )
-                              ),
+                              Flexible(flex: 1, child: Center(child: Text('Date'))),
+                              Flexible(flex: 1, child: Center(child: Text('Workout'))),
+                              Flexible(flex: 1, child: Center(child: Text('Rest'))),
                             ],
                           ),
                         ],
@@ -528,8 +496,10 @@ class _SetsPageState extends State<SetsPage> {
                                     // ROW 1: Sets / Volume / Reps
                                     Row(
                                       children: [
-                                        Expanded(
-                                          child: Text(
+                                        Flexible(
+                                          flex: 1,
+                                          child: Center(child:
+                                          Text(
                                             'Sets: $totalSets',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
@@ -538,9 +508,12 @@ class _SetsPageState extends State<SetsPage> {
                                               color: scheme.primary,
                                             ),
                                           ),
+                                          )
                                         ),
-                                        Expanded(
-                                          child: Text(
+                                        Flexible(
+                                          flex: 2,
+                                          child: Center(child:
+                                          Text(
                                             'Volume: ${totalVolume.toStringAsFixed(1)} $_unit',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
@@ -549,17 +522,21 @@ class _SetsPageState extends State<SetsPage> {
                                               color: scheme.primary,
                                             ),
                                           ),
+                                          )
                                         ),
-                                        Expanded(
-                                          child: Text(
-                                            'Reps: $totalReps',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: scheme.primary,
+                                        Flexible(
+                                          flex: 1,
+                                          child: Center(
+                                            child: Text(
+                                                'Reps: $totalReps',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: scheme.primary,
+                                                ),
                                             ),
-                                          ),
+                                          )
                                         ),
                                       ],
                                     ),
@@ -608,11 +585,15 @@ class _SetsPageState extends State<SetsPage> {
                                 children: dateSets.map((set) {
                                   return GestureDetector(
                                     onTap: () async {
-                                      final result = await showDialog(
+                                      final updatedSet = await showDialog<SetModel>(
                                         context: context,
                                         builder: (_) => EditSetDialog(set: set, unit: _unit),
                                       );
-                                      if (result == true) {
+
+                                      if (updatedSet == null) {
+                                        _loadSets(); // refresh the list
+                                      } else {
+                                        // Set was updated
                                         _loadSets();
                                       }
                                     },
@@ -667,19 +648,22 @@ class _SetsPageState extends State<SetsPage> {
 
   Widget _valueBox(String value, double verticalPad, double fontSize) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-      padding: EdgeInsets.symmetric(vertical: verticalPad),
+      constraints: const BoxConstraints(minWidth: 50), // ensure width doesn't shrink too much
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      padding: EdgeInsets.symmetric(vertical: verticalPad, horizontal: 4), // extra horizontal padding
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.grey),
       ),
       child: Center(
-          child: Text(
-            value,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: fontSize),
-          )),
+        child: Text(
+          value,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: fontSize),
+        ),
+      ),
     );
   }
+
 }

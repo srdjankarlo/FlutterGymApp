@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../database/app_database.dart';
 import '../models/set_model.dart';
-import '../models/exercise_model.dart';
+import '../providers/unit_provider.dart';
 import '../widgets/edit_set_dialog.dart';
-import '../widgets/edit_set_dialog.dart'; // if you have this dialog
-import '../pages/sets_page.dart'; // if _valueBox is in its own widget
 
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
@@ -16,7 +15,7 @@ class ExerciseLogPage extends StatefulWidget {
 
 class _ExerciseLogPageState extends State<ExerciseLogPage> {
   late Future<List<Map<String, dynamic>>> _setsFuture;
-  String _unit = 'kg'; // can later come from settings
+  String get _unit => Provider.of<UnitProvider>(context).isMetric ? 'kg' : 'lbs';
 
   @override
   void initState() {
@@ -53,7 +52,14 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   String formatSeconds(int seconds) {
     final Duration d = Duration(seconds: seconds);
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    return '${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}';
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final secs = d.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(secs)}';
+    } else {
+      return '${twoDigits(minutes)}:${twoDigits(secs)}';
+    }
   }
 
   double _displayWeight(double weight) {
@@ -62,21 +68,19 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   }
 
   Widget _valueBox(String value, double vertical, double fontSize) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-        padding: EdgeInsets.symmetric(vertical: vertical),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey),
-        ),
-        child: Center(
-          child: Text(
-            value,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: fontSize),
-          ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      padding: EdgeInsets.symmetric(vertical: vertical),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey),
+      ),
+      child: Center(
+        child: Text(
+          value,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: fontSize),
         ),
       ),
     );
@@ -149,14 +153,24 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        'Total: ${formatSeconds(totalWorkDay + totalRestDay)} '
-                            '(Work: ${formatSeconds(totalWorkDay)}  Rest: ${formatSeconds(totalRestDay)})',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      Row(
+                        children: [
+                          // Work
+                          Flexible(
+                            flex: 1,
+                            child: _valueBox('Work:\n${formatSeconds(totalWorkDay)}', 4, 13),
+                          ),
+                          // Rest
+                          Flexible(
+                            flex: 1,
+                            child: _valueBox('Rest:\n${formatSeconds(totalRestDay)}', 4, 13),
+                          ),
+                          // Total
+                          Flexible(
+                            flex: 2,
+                            child: _valueBox('Total:\n${formatSeconds(totalWorkDay + totalRestDay)}', 4, 13),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -286,36 +300,42 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                         children: exerciseSets.map((set) {
                           return Card(
                             color: Theme.of(context).colorScheme.primaryContainer,
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 3, horizontal: 8),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      _valueBox('${set.setNumber}', 4, 13),
-                                      _valueBox(
-                                          '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit',
-                                          4,
-                                          13),
-                                      _valueBox('${set.reps}', 4, 13),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      _valueBox(
-                                          DateFormat('HH:mm:ss')
-                                              .format(set.timestamp),
-                                          4,
-                                          13),
-                                      _valueBox(formatSeconds(set.workTime), 4, 13),
-                                      _valueBox(formatSeconds(set.restTime), 4, 13),
-                                    ],
-                                  ),
-                                ],
+                            margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            child: GestureDetector(
+                              onTap: () async {
+                                // Open edit dialog
+                                final editedSet = await showDialog<SetModel>(
+                                  context: context,
+                                  builder: (_) => EditSetDialog(set: set, unit: _unit),
+                                );
+
+                                // Refresh sets
+                                setState(() {
+                                  _loadSets();
+                                });
+
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(child: _valueBox('${set.setNumber}', 4, 13)),
+                                        Expanded(child: _valueBox('${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
+                                        Expanded(child: _valueBox('${set.reps}', 4, 13)),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(child: _valueBox(DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
+                                        Expanded(child: _valueBox(formatSeconds(set.workTime), 4, 13)),
+                                        Expanded(child: _valueBox(formatSeconds(set.restTime), 4, 13)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
