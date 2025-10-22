@@ -30,19 +30,36 @@ class _ExercisesPageState extends State<ExercisesPage> {
   @override
   void initState() {
     super.initState();
-    _loadExercises();
+    // _loadExercises();
+    _refreshExercises();
     _loadAllMuscles();
   }
 
-  void _loadExercises() {
-    // Get all exercises and we'll filter them manually for primary/secondary display
-    _exercisesFuture = AppDatabase.instance.getAllExercises();
+  // void _loadExercises() {
+  //   Get all exercises and we'll filter them manually for primary/secondary display
+  //   _exercisesFuture = AppDatabase.instance.getAllExercises();
+  // }
+
+  // new
+  void _refreshExercises(){
+    _exercisesFuture = AppDatabase.instance.getExercisesByMuscle(widget.muscleId);
   }
 
-  void _loadAllMuscles() async {
-    final maps = await AppDatabase.instance.getMusclesWithExerciseCount();
+  // void _loadAllMuscles() async {
+  //   final maps = await AppDatabase.instance.getMusclesWithExerciseCount();
+  //   _allMuscles = maps.map((m) => MuscleModel.fromMap(m)).toList();
+  //   setState(() {}); // trigger rebuild so dropdowns work
+  // }
+
+
+  // new
+  Future<void> _loadAllMuscles() async {
+    final db = await AppDatabase.instance.database;
+    final maps = await db.query('muscles');
     _allMuscles = maps.map((m) => MuscleModel.fromMap(m)).toList();
-    setState(() {}); // trigger rebuild so dropdowns work
+    // setState(() {});
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<String?> _pickAndResizeImage() async {
@@ -200,7 +217,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
                   if (mounted) {
                     Navigator.pop(context);
-                    setState(() => _loadExercises());
+                    setState(() => _refreshExercises());
                   }
                 },
                 child: const Text('Save'),
@@ -233,7 +250,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
 
     if (confirm == true) {
       await AppDatabase.instance.deleteExercise(id);
-      setState(() => _loadExercises());
+      setState(() => _refreshExercises());
     }
   }
 
@@ -267,6 +284,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
         );
       },
       child: Card(
+        color: Theme.of(context).colorScheme.primary,
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         elevation: 3,
         shape: RoundedRectangleBorder(

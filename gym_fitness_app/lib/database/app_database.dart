@@ -200,6 +200,12 @@ class AppDatabase {
   }
 
   // ====== MUSCLES ======
+  Future<List<MuscleModel>> getAllMuscles() async {
+    final db = await instance.database;
+    final maps = await db.query('muscles');
+    return maps.map((m) => MuscleModel.fromMap(m)).toList();
+  }
+
   List<int> parseMuscleIds(String? csv) {
     if (csv == null || csv.trim().isEmpty) return [];
     return csv
@@ -243,6 +249,17 @@ class AppDatabase {
   }
 
   // ====== EXERCISES ======
+  Future<List<ExerciseModel>> getExercisesByMuscle(int muscleId) async {
+    final db = await instance.database;
+    final result = await db.query('exercises');
+    return result
+        .map((e) => ExerciseModel.fromMap(e))
+        .where((ex) =>
+    ex.primaryMuscleIDs.contains(muscleId) ||
+        (ex.secondaryMuscleIDs ?? []).contains(muscleId))
+        .toList();
+  }
+
   Future<List<ExerciseModel>> getAllExercises() async {
     final db = await instance.database;
     final result = await db.query('exercises'); // assuming your table is named 'exercises'

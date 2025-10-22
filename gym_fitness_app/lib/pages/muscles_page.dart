@@ -209,6 +209,7 @@ class _MusclesPageState extends State<MusclesPage> {
         itemBuilder: (context, index) {
           final muscle = _muscles[index];
           return Card(
+            color: Theme.of(context).colorScheme.primary,
             margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             elevation: 3,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

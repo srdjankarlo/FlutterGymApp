@@ -600,9 +600,7 @@ class _SetsPageState extends State<SetsPage> {
                                     child: Card(
                                       color: primaryColor,
                                       margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                       child: Padding(
                                         padding: const EdgeInsets.all(4),
                                         child: Column(
@@ -611,8 +609,7 @@ class _SetsPageState extends State<SetsPage> {
                                             Row(
                                               children: [
                                                 Flexible(flex: 1, child: _valueBox('${set.setNumber}', 4, 13)),
-                                                Flexible(flex: 1, child: _valueBox(
-                                                    '${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox('${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
                                                 Flexible(flex: 1, child: _valueBox('${set.reps}', 4, 13)),
                                               ],
                                             ),
@@ -620,8 +617,7 @@ class _SetsPageState extends State<SetsPage> {
                                             // Row 2: Time, Work, Rest
                                             Row(
                                               children: [
-                                                Flexible(flex: 1, child: _valueBox(
-                                                    DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox(DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
                                                 Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
                                                 Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
                                               ],
