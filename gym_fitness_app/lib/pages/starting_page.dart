@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gym_fitness_app/pages/muscles_page.dart';
-import 'package:gym_fitness_app/pages/workout_page.dart';
 import '../widgets/settings_drawer.dart';
 import 'exercise_log_page.dart';
 
@@ -9,7 +8,6 @@ class StartingPage extends StatelessWidget {
 
   final List<String> menuItems = const [
     'Muscles',
-    'Workout',
     'Training Plans',
     'Exercise Log',
     'Personal Records',
@@ -50,11 +48,6 @@ class StartingPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ExerciseLogPage()),
-                    );
-                  } else if (item == 'Workout') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const WorkoutPage()),
                     );
                   }
                   else {

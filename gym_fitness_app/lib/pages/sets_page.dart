@@ -28,12 +28,16 @@ class _SetsPageState extends State<SetsPage> {
   final TextEditingController _setController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
-  int _workSeconds = 0;
-  int _restSeconds = 0;
-  Timer? _workTimer;
-  Timer? _restTimer;
-  bool _isWorkTimerRunning = false;
-  bool _isRestTimerRunning = false;
+
+  // Stopwatch state
+  DateTime? _workStartTime;
+  DateTime? _restStartTime;
+  Duration _elapsedWork = Duration.zero;
+  Duration _elapsedRest = Duration.zero;
+  Timer? _uiTimer; // updates the screen every second
+
+  bool get _isWorkRunning => _workStartTime != null;
+  bool get _isRestRunning => _restStartTime != null;
 
   late Future<List<SetModel>> _setsFuture;
   String get _unit => Provider.of<UnitProvider>(context).isMetric ? 'kg' : 'lbs';
@@ -50,57 +54,92 @@ class _SetsPageState extends State<SetsPage> {
     });
   }
 
-  void _toggleTimer({required bool isWork}) {
+  void _toggleStopwatch({required bool isWork}) {
     if (isWork) {
-      if (_isWorkTimerRunning) {
-        _workTimer?.cancel();
-        setState(() => _isWorkTimerRunning = false);
+      if (_isWorkRunning) {
+        _pauseStopwatch(isWork: true);
       } else {
-        _startTimer(isWork: true);
+        _startStopwatch(isWork: true);
       }
     } else {
-      if (_isRestTimerRunning) {
-        _restTimer?.cancel();
-        setState(() => _isRestTimerRunning = false);
+      if (_isRestRunning) {
+        _pauseStopwatch(isWork: false);
       } else {
-        _startTimer(isWork: false);
+        _startStopwatch(isWork: false);
       }
     }
   }
 
-  void _startTimer({required bool isWork}) {
+  void _startStopwatch({required bool isWork}) {
     if (isWork) {
-      _workTimer?.cancel();
-      _workTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-        setState(() {
-          _workSeconds++;
-          _isWorkTimerRunning = true;
-        });
-      });
+      _workStartTime = DateTime.now();
     } else {
-      _restTimer?.cancel();
-      _restTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-        setState(() {
-          _restSeconds++;
-          _isRestTimerRunning = true;
-        });
-      });
+      _restStartTime = DateTime.now();
     }
+
+    _uiTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+    });
   }
 
-  void _resetTimer({required bool isWork}) {
+  void _pauseStopwatch({required bool isWork}) {
+    final now = DateTime.now();
+    if (isWork && _workStartTime != null) {
+      _elapsedWork += now.difference(_workStartTime!);
+      _workStartTime = null;
+    } else if (!isWork && _restStartTime != null) {
+      _elapsedRest += now.difference(_restStartTime!);
+      _restStartTime = null;
+    }
+
+    // stop UI timer if both are paused
+    if (!_isWorkRunning && !_isRestRunning) {
+      _uiTimer?.cancel();
+      _uiTimer = null;
+    }
+
+    setState(() {});
+  }
+
+  void _resetStopwatch({required bool isWork}) {
     if (isWork) {
-      _workTimer?.cancel();
-      setState(() {
-        _workSeconds = 0;
-        _isWorkTimerRunning = false;
-      });
+      _workStartTime = null;
+      _elapsedWork = Duration.zero;
     } else {
-      _restTimer?.cancel();
-      setState(() {
-        _restSeconds = 0;
-        _isRestTimerRunning = false;
-      });
+      _restStartTime = null;
+      _elapsedRest = Duration.zero;
+    }
+
+    if (!_isWorkRunning && !_isRestRunning) {
+      _uiTimer?.cancel();
+      _uiTimer = null;
+    }
+
+    setState(() {});
+  }
+
+  Duration get _currentWorkTime {
+    if (_isWorkRunning) {
+      return _elapsedWork + DateTime.now().difference(_workStartTime!);
+    }
+    return _elapsedWork;
+  }
+
+  Duration get _currentRestTime {
+    if (_isRestRunning) {
+      return _elapsedRest + DateTime.now().difference(_restStartTime!);
+    }
+    return _elapsedRest;
+  }
+
+  String _formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    } else {
+      return '$minutes:$seconds';
     }
   }
 
@@ -137,18 +176,8 @@ class _SetsPageState extends State<SetsPage> {
       return;
     }
 
-    final workTimeToStore = _workSeconds;
-    final restTimeToStore = _restSeconds;
-
-    _workTimer?.cancel();
-    _restTimer?.cancel();
-
-    setState(() {
-      _workSeconds = 0;
-      _restSeconds = 0;
-      _isWorkTimerRunning = false;
-      _isRestTimerRunning = false;
-    });
+    final workTimeToStore = _currentWorkTime.inSeconds;
+    final restTimeToStore = _currentRestTime.inSeconds;
 
     double weightToStore = unitProvider.isMetric ? weight : weight / 2.20462;
 
@@ -165,6 +194,9 @@ class _SetsPageState extends State<SetsPage> {
 
     await AppDatabase.instance.insertSet(newSet);
 
+    _resetStopwatch(isWork: true);
+    _resetStopwatch(isWork: false);
+
     setState(() {
       _setController.clear();
       _weightController.clear();
@@ -177,26 +209,6 @@ class _SetsPageState extends State<SetsPage> {
   double _displayWeight(double weightInKg) {
     if (_unit == 'lbs') return weightInKg * 2.20462;
     return weightInKg;
-  }
-
-  String formatSeconds(int totalSeconds) {
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final seconds = totalSeconds % 60;
-    final twoDigits = (int n) => n.toString().padLeft(2, '0');
-
-    if (hours > 0) {
-      return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
-    } else {
-      return '${twoDigits(minutes)}:${twoDigits(seconds)}';
-    }
-  }
-
-  @override
-  void dispose() {
-    _workTimer?.cancel();
-    _restTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -238,35 +250,33 @@ class _SetsPageState extends State<SetsPage> {
                             children: [
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () => _toggleTimer(isWork: true),
+                                  onPressed: () => _toggleStopwatch(isWork: true),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isWorkTimerRunning
+                                    backgroundColor: _isWorkRunning
                                         ? Colors.red   // Stop = red
                                         : Colors.green, // Start = green
                                     padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
-                                    _isWorkTimerRunning ? 'Stop Workout' : 'Start Workout',
+                                    _isWorkRunning ? 'Stop Workout' : 'Start Workout',
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(color: Colors.white, fontSize: 16),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(formatSeconds(_workSeconds), 10, 25),
+                              _valueBox(_formatDuration(_currentWorkTime), 10, 25),
                               const SizedBox(width: 4),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => _resetTimer(isWork: true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 25),
-                                  ),
-                                  child: const Text(
-                                    'Reset',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 16),
-                                  ),
+                              ElevatedButton(
+                                onPressed: () => _resetStopwatch(isWork: true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+                                ),
+                                child: const Text(
+                                  'Reset',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
                                 ),
                               ),
                             ],
@@ -333,35 +343,33 @@ class _SetsPageState extends State<SetsPage> {
                             children: [
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () => _toggleTimer(isWork: false),
+                                  onPressed: () => _toggleStopwatch(isWork: false),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isRestTimerRunning
+                                    backgroundColor: _isRestRunning
                                         ? Colors.red   // Stop = red
                                         : Colors.green, // Start = green
                                     padding: const EdgeInsets.symmetric(vertical: 25),
                                   ),
                                   child: Text(
-                                    _isRestTimerRunning ? 'Stop Rest' : 'Start Rest',
+                                    _isRestRunning ? 'Stop Rest' : 'Start Rest',
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(color: Colors.white, fontSize: 16),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(formatSeconds(_restSeconds), 10, 25),
+                              _valueBox(_formatDuration(_currentRestTime), 10, 25),
                               const SizedBox(width: 4),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => _resetTimer(isWork: false),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                                    padding: const EdgeInsets.symmetric(vertical: 25),
-                                  ),
-                                  child: const Text(
-                                    'Reset',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 16),
-                                  ),
+                              ElevatedButton(
+                                onPressed: () => _resetStopwatch(isWork: false),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+                                ),
+                                child: const Text(
+                                  'Reset',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
                                 ),
                               ),
                             ],
@@ -458,14 +466,6 @@ class _SetsPageState extends State<SetsPage> {
                           // Calculate total work and rest time (in seconds)
                           int totalWork = dateSets.fold(0, (sum, set) => sum + set.workTime);
                           int totalRest = dateSets.fold(0, (sum, set) => sum + set.restTime);
-                          int totalTime = totalWork + totalRest;
-
-                          // Helper to format seconds as mm:ss
-                          String formatTime(int seconds) {
-                            final m = (seconds ~/ 60).toString().padLeft(2, '0');
-                            final s = (seconds % 60).toString().padLeft(2, '0');
-                            return '$m:$s';
-                          }
 
                           return Card(
                             color: scheme.surfaceContainerHighest,
@@ -547,7 +547,7 @@ class _SetsPageState extends State<SetsPage> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            'Work: ${formatSeconds(totalWork)}',
+                                            'Work: ${_formatDuration(Duration(seconds: totalWork))}',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 13,
@@ -558,7 +558,7 @@ class _SetsPageState extends State<SetsPage> {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            'Rest: ${formatSeconds(totalRest)}',
+                                            'Rest: ${_formatDuration(Duration(seconds: totalRest))}',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 13,
@@ -569,7 +569,7 @@ class _SetsPageState extends State<SetsPage> {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            'Total: ${formatSeconds(totalWork + totalRest)}',
+                                            'Total: ${_formatDuration(Duration(seconds: (totalWork + totalRest)))}',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 13,
@@ -618,8 +618,8 @@ class _SetsPageState extends State<SetsPage> {
                                             Row(
                                               children: [
                                                 Flexible(flex: 1, child: _valueBox(DateFormat('HH:mm:ss').format(set.timestamp), 4, 13)),
-                                                Flexible(flex: 1, child: _valueBox(formatSeconds(set.workTime), 4, 13)),
-                                                Flexible(flex: 1, child: _valueBox(formatSeconds(set.restTime), 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox(_formatDuration(Duration(seconds: set.workTime)), 4, 13)),
+                                                Flexible(flex: 1, child: _valueBox(_formatDuration(Duration(seconds: set.restTime)), 4, 13)),
                                               ],
                                             ),
                                           ],
