@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gym_fitness_app/pages/muscles_page.dart';
+import 'muscles_page.dart';
+import 'personal_records_page.dart';
 import '../widgets/settings_drawer.dart';
 import 'exercise_log_page.dart';
 
@@ -10,9 +11,7 @@ class StartingPage extends StatelessWidget {
     'Muscles',
     'Training Plans',
     'Exercise Log',
-    'Personal Records',
-    'Food',
-    'Diet Plans',
+    'Personal Records'
   ];
 
   @override
@@ -48,6 +47,11 @@ class StartingPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ExerciseLogPage()),
+                    );
+                  } else if (item == 'Personal Records') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PersonalRecordsPage()),
                     );
                   }
                   else {

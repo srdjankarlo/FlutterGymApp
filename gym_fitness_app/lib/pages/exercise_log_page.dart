@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../database/app_database.dart';
 import '../models/set_model.dart';
 import '../providers/unit_provider.dart';
-import '../widgets/edit_set_dialog.dart';
+// import '../widgets/edit_set_dialog.dart';
 
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
@@ -88,7 +88,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    // final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Exercise Log')),
@@ -305,10 +305,10 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                             child: GestureDetector(
                               onTap: () async {
                                 // Open edit dialog
-                                final editedSet = await showDialog<SetModel>(
-                                  context: context,
-                                  builder: (_) => EditSetDialog(set: set, unit: _unit),
-                                );
+                                // final editedSet = await showDialog<SetModel>(
+                                //   context: context,
+                                //   builder: (_) => EditSetDialog(set: set, unit: _unit),
+                                // );
 
                                 // Refresh sets
                                 setState(() {
