@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../database/app_database.dart';
+import '../models/exercise_model.dart';
 import '../models/set_model.dart';
 import '../providers/unit_provider.dart';
 import '../widgets/edit_set_dialog.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:csv/csv.dart';
+import 'package:pdf/pdf.dart';
 
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
@@ -15,7 +21,6 @@ class ExerciseLogPage extends StatefulWidget {
 
 class _ExerciseLogPageState extends State<ExerciseLogPage> {
   late Future<List<Map<String, dynamic>>> _setsFuture;
-  String get _unit => Provider.of<UnitProvider>(context).isMetric ? 'kg' : 'lbs';
   bool _expandPrimary = true;
   bool _expandSecondary = true;
 
@@ -64,9 +69,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     }
   }
 
-  double _displayWeight(double weight) {
-    if (_unit == 'lbs') return weight * 2.20462;
-    return weight;
+  double _displayWeight(double weight, String unit) {
+    return unit == 'lbs' ? weight * 2.20462 : weight;
   }
 
   Widget _valueBox(String value, double vertical, double fontSize) {
@@ -90,7 +94,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
 
   @override
   Widget build(BuildContext context) {
-    // final scheme = Theme.of(context).colorScheme;
+    final unitProvider = Provider.of<UnitProvider>(context); // safe inside build
+    final unit = unitProvider.isMetric ? 'kg' : 'lbs';
 
     return Scaffold(
       appBar: AppBar(
@@ -116,6 +121,23 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
               });
             }
                 : null, // disabled if main cards collapsed
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) async {
+              if (value == 'pdf') {
+                await _makePdfReport();
+              } else if (value == 'export') {
+                await _exportDataToCsv();
+              } else if (value == 'import') {
+                await _importDataFromCsv();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'pdf', child: Text('Make PDF report')),
+              const PopupMenuItem(value: 'export', child: Text('Export data')),
+              const PopupMenuItem(value: 'import', child: Text('Import data')),
+            ],
           ),
         ],
       ),
@@ -255,7 +277,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                                   flex: 2,
                                   child: Center(
                                     child: Text(
-                                      'Volume: ${totalVolume.toStringAsFixed(1)} $_unit',
+                                      'Volume: ${totalVolume.toStringAsFixed(1)} $unit',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -337,7 +359,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                                 // Open edit dialog
                                 final editedSet = await showDialog<SetModel>(
                                   context: context,
-                                  builder: (_) => EditSetDialog(set: set, unit: _unit),
+                                  builder: (_) => EditSetDialog(set: set, unit: unit),
                                 );
 
                                 // Refresh sets
@@ -355,7 +377,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                                     Row(
                                       children: [
                                         Expanded(child: _valueBox('${set.setNumber}', 4, 13)),
-                                        Expanded(child: _valueBox('${_displayWeight(set.weight).toStringAsFixed(1)} $_unit', 4, 13)),
+                                        Expanded(child: _valueBox('${_displayWeight(set.weight, unit).toStringAsFixed(1)} $unit', 4, 13)),
                                         Expanded(child: _valueBox('${set.reps}', 4, 13)),
                                       ],
                                     ),
@@ -388,4 +410,245 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     return nameMap[exerciseId];
   }
 
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _makePdfReport() async {
+    final pdf = pw.Document();
+    final setsData = await _getSetsWithExerciseNames();
+    final unit = Provider.of<UnitProvider>(context, listen: false).isMetric ? 'kg' : 'lbs';
+
+    final baseFont = pw.Font.courier(); // Simple built-in font
+
+    // Group sets by date
+    final Map<String, List<Map<String, dynamic>>> groupedByDate = {};
+    for (final map in setsData) {
+      final dateKey = DateFormat('yyyy-MM-dd').format((map['set'] as SetModel).timestamp);
+      groupedByDate.putIfAbsent(dateKey, () => []).add(map);
+    }
+
+    final sortedDates = groupedByDate.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          List<pw.Widget> widgets = [];
+
+          for (final dateKey in sortedDates) {
+            final dateSets = groupedByDate[dateKey]!;
+            final displayDate = DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
+
+            // Date header
+            widgets.add(
+              pw.Text(displayDate,
+                  style: pw.TextStyle(font: baseFont, fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            );
+            widgets.add(pw.SizedBox(height: 8));
+
+            // Group by exerciseId within this date
+            final Map<int, List<Map<String, dynamic>>> exercisesGrouped = {};
+            for (final map in dateSets) {
+              final set = map['set'] as SetModel;
+              exercisesGrouped.putIfAbsent(set.exerciseId, () => []).add(map);
+            }
+
+            // Add each exercise under this date
+            for (final entry in exercisesGrouped.entries) {
+              final exerciseSets = entry.value;
+              final exerciseName = exerciseSets.first['exerciseName'] as String;
+
+              widgets.add(
+                pw.Text(exerciseName,
+                    style: pw.TextStyle(font: baseFont, fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              );
+              widgets.add(pw.SizedBox(height: 4));
+
+              final totalVolume = exerciseSets.fold<double>(0.0,
+                      (sum, e) => sum + ((e['set'] as SetModel).weight * (e['set'] as SetModel).reps));
+              final totalWork = exerciseSets.fold<int>(
+                  0, (sum, e) => sum + (e['set'] as SetModel).workTime);
+              final totalRest = exerciseSets.fold<int>(
+                  0, (sum, e) => sum + (e['set'] as SetModel).restTime);
+
+              widgets.add(
+                pw.Text('Total Volume: ${totalVolume.toStringAsFixed(1)} $unit, '
+                    'Work: ${formatSeconds(totalWork)}, Rest: ${formatSeconds(totalRest)}',
+                    style: pw.TextStyle(font: baseFont, fontSize: 12)),
+              );
+              widgets.add(pw.SizedBox(height: 4));
+
+              widgets.add(
+                pw.TableHelper.fromTextArray(
+                  headers: ['Set', 'Weight', 'Reps', 'Work', 'Rest'],
+                  data: exerciseSets.map((e) {
+                    final s = e['set'] as SetModel;
+                    return [
+                      s.setNumber.toString(),
+                      _displayWeight(s.weight, unit).toStringAsFixed(1),
+                      s.reps.toString(),
+                      formatSeconds(s.workTime),
+                      formatSeconds(s.restTime),
+                    ];
+                  }).toList(),
+                  headerStyle: pw.TextStyle(font: baseFont, fontWeight: pw.FontWeight.bold),
+                  cellStyle: pw.TextStyle(font: baseFont),
+                ),
+              );
+
+              widgets.add(pw.SizedBox(height: 12)); // Space before next exercise
+            }
+          }
+          return widgets;
+        },
+      ),
+    );
+
+    // Save PDF
+    Directory? downloads;
+    if (Platform.isAndroid) {
+      downloads = Directory('/storage/emulated/0/Download');
+    } else {
+      downloads = await getApplicationDocumentsDirectory();
+    }
+
+    final timestamp = DateFormat('ddMMyyyyHHmmss').format(DateTime.now());
+    final file = File('${downloads.path}/FitAppReport_$timestamp.pdf');
+    await file.writeAsBytes(await pdf.save());
+
+    _showMessage("PDF saved as FitAppReport_$timestamp.pdf in ${downloads.path}");
+  }
+
+  // CSV export
+  Future<void> _exportDataToCsv() async {
+    final db = AppDatabase.instance;
+    final setsData = await _getSetsWithExerciseNames();
+    final exercises = await db.getAllExercises();
+    final timestamp = DateFormat('ddMMyyyyHHmmss').format(DateTime.now());
+
+    final List<List<dynamic>> rows = [
+      ['exercise_id','exercise_name','primary_muscle_ids','secondary_muscle_ids','set_number','weight','reps','work_time','rest_time','timestamp']
+    ];
+
+    for (final map in setsData) {
+      final set = map['set'] as SetModel;
+      final exercise = exercises.firstWhere((e) => e.id == set.exerciseId);
+      rows.add([
+        exercise.id,
+        exercise.name,
+        exercise.primaryMuscleIDs.join(','),
+        exercise.secondaryMuscleIDs?.join(',') ?? '',
+        set.setNumber,
+        set.weight,
+        set.reps,
+        set.workTime,
+        set.restTime,
+        set.timestamp.toIso8601String(),
+      ]);
+    }
+
+    final csvString = const ListToCsvConverter().convert(rows);
+
+    Directory? downloads;
+    if (Platform.isAndroid) {
+      downloads = Directory('/storage/emulated/0/Download');
+    } else {
+      downloads = await getApplicationDocumentsDirectory();
+    }
+
+    final file = File('${downloads.path}/FitAppData_$timestamp.csv');
+    await file.writeAsString(csvString);
+
+    _showMessage("CSV exported as FitAppData_$timestamp.csv in ${downloads.path}");
+  }
+
+  // CSV import
+  Future<void> _importDataFromCsv() async {
+    final db = AppDatabase.instance;
+
+    Directory? downloadsDir;
+    if (Platform.isAndroid) {
+      downloadsDir = Directory('/storage/emulated/0/Download');
+    } else if (Platform.isIOS) {
+      downloadsDir = await getApplicationDocumentsDirectory();
+    }
+
+    if (!downloadsDir!.existsSync()) return;
+
+    final csvFiles = downloadsDir
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.csv') && f.path.contains('FitAppData_'))
+        .toList();
+
+    if (csvFiles.isEmpty) return;
+
+    csvFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    final latestFile = csvFiles.first;
+
+    final csvString = await latestFile.readAsString();
+    final rows = const CsvToListConverter().convert(csvString, eol: '\n');
+
+    if (rows.isEmpty) return;
+
+    final headers = rows.first.cast<String>();
+    final dataRows = rows.sublist(1);
+
+    final allExercises = await db.getAllExercises();
+    final Map<String, ExerciseModel> exerciseMap = { for (var e in allExercises) e.name: e };
+
+    for (final row in dataRows) {
+      final Map<String, dynamic> rowMap = Map.fromIterables(headers, row);
+
+      final exerciseName = rowMap['exercise_name'] as String;
+      ExerciseModel? exercise = exerciseMap[exerciseName];
+
+      if (exercise == null) {
+        final primaryMuscles = (rowMap['primary_muscle_ids'] as String).split(',').map((s) => int.parse(s.trim())).toList();
+        final secondaryMuscles = (rowMap['secondary_muscle_ids'] as String).isNotEmpty
+            ? (rowMap['secondary_muscle_ids'] as String).split(',').map((s) => int.parse(s.trim())).toList()
+            : null;
+
+        exercise = ExerciseModel(
+          name: exerciseName,
+          primaryMuscleIDs: primaryMuscles,
+          secondaryMuscleIDs: secondaryMuscles,
+        );
+
+        final newId = await db.insertExercise(exercise);
+        exercise = ExerciseModel(
+          id: newId,
+          name: exerciseName,
+          primaryMuscleIDs: primaryMuscles,
+          secondaryMuscleIDs: secondaryMuscles,
+        );
+        exerciseMap[exerciseName] = exercise;
+      }
+
+      final set = SetModel(
+        exerciseId: exercise.id!,
+        setNumber: rowMap['set_number'] is int ? rowMap['set_number'] : int.parse(rowMap['set_number'].toString()),
+        weight: rowMap['weight'] is double ? rowMap['weight'] : double.parse(rowMap['weight'].toString()),
+        reps: rowMap['reps'] is int ? rowMap['reps'] : int.parse(rowMap['reps'].toString()),
+        workTime: rowMap['work_time'] is int ? rowMap['work_time'] : int.parse(rowMap['work_time'].toString()),
+        restTime: rowMap['rest_time'] is int ? rowMap['rest_time'] : int.parse(rowMap['rest_time'].toString()),
+        timestamp: DateTime.parse(rowMap['timestamp'] as String),
+      );
+
+      await db.insertSet(set);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('CSV data imported from: ${latestFile.path.split('/').last}')),
+      );
+    }
+    print('CSV imported from: ${latestFile.path}');
+  }
 }
