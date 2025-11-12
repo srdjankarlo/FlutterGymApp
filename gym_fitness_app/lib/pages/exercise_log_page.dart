@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../database/app_database.dart';
 import '../models/set_model.dart';
 import '../providers/unit_provider.dart';
-// import '../widgets/edit_set_dialog.dart';
+import '../widgets/edit_set_dialog.dart';
 
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
@@ -16,6 +16,8 @@ class ExerciseLogPage extends StatefulWidget {
 class _ExerciseLogPageState extends State<ExerciseLogPage> {
   late Future<List<Map<String, dynamic>>> _setsFuture;
   String get _unit => Provider.of<UnitProvider>(context).isMetric ? 'kg' : 'lbs';
+  bool _expandPrimary = true;
+  bool _expandSecondary = true;
 
   @override
   void initState() {
@@ -91,7 +93,32 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     // final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Exercise Log')),
+      appBar: AppBar(
+        title: const Text('Exercise Log'),
+        actions: [
+          IconButton(
+            tooltip: _expandPrimary ? 'Collapse all days' : 'Expand all days',
+            icon: Icon(_expandPrimary ? Icons.unfold_less : Icons.unfold_more),
+            onPressed: () {
+              setState(() {
+                _expandPrimary = !_expandPrimary;
+                if (!_expandPrimary) _expandSecondary = false; // collapse inner if main collapsed
+              });
+            },
+          ),
+          IconButton(
+            tooltip: _expandSecondary ? 'Collapse all exercises' : 'Expand all exercises',
+            icon: Icon(_expandSecondary ? Icons.expand_less : Icons.expand_more),
+            onPressed: _expandPrimary
+                ? () {
+              setState(() {
+                _expandSecondary = !_expandSecondary;
+              });
+            }
+                : null, // disabled if main cards collapsed
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _setsFuture,
         builder: (context, snapshot) {
@@ -141,7 +168,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 elevation: 3,
                 child: ExpansionTile(
-                  initiallyExpanded: true,
+                  key: ValueKey('$dateKey-$_expandPrimary'),
+                  initiallyExpanded: _expandPrimary,
                   title: Column(
                     children: [
                       Text(
@@ -196,6 +224,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                       child: ExpansionTile(
+                        key: ValueKey('$dateKey-$exerciseId-$_expandSecondary'),
+                        initiallyExpanded: _expandSecondary && _expandPrimary,
                         title: Column(
                           children: [
                             Text(
@@ -305,16 +335,18 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                             child: GestureDetector(
                               onTap: () async {
                                 // Open edit dialog
-                                // final editedSet = await showDialog<SetModel>(
-                                //   context: context,
-                                //   builder: (_) => EditSetDialog(set: set, unit: _unit),
-                                // );
+                                final editedSet = await showDialog<SetModel>(
+                                  context: context,
+                                  builder: (_) => EditSetDialog(set: set, unit: _unit),
+                                );
 
                                 // Refresh sets
-                                setState(() {
-                                  _loadSets();
-                                });
-
+                                if (editedSet != null) {
+                                  await AppDatabase.instance.updateSet(editedSet);
+                                  setState(() {
+                                    _loadSets();
+                                  });
+                                }
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
