@@ -296,7 +296,8 @@ class _PersonalRecordsPageState extends State<PersonalRecordsPage> {
                         return FlSpot(e.key.toDouble(), (isWeightChart ? e.value.weight : e.value.reps.toDouble()));
                       }).toList(),
                       isCurved: false,
-                      color: isWeightChart ? Colors.blueAccent : Colors.green,
+                      // color: isWeightChart ? Colors.blueAccent : Colors.green,
+                      color: Theme.of(context).colorScheme.primary,
                       barWidth: 3,
                       dotData: const FlDotData(show: true),
                     ),

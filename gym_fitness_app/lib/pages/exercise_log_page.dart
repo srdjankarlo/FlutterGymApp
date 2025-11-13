@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:csv/csv.dart';
 import 'package:pdf/pdf.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ExerciseLogPage extends StatefulWidget {
   const ExerciseLogPage({super.key});
@@ -23,6 +24,15 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   late Future<List<Map<String, dynamic>>> _setsFuture;
   bool _expandPrimary = true;
   bool _expandSecondary = true;
+
+  String _s(dynamic v) => (v ?? "").toString().trim();
+  int _i(dynamic v) => int.tryParse(_s(v)) ?? 0;
+  double _d(dynamic v) => double.tryParse(_s(v)) ?? 0;
+
+  DateTime _dt(dynamic v) {
+    final s = _s(v);
+    return s.isEmpty ? DateTime.now() : (DateTime.tryParse(s) ?? DateTime.now());
+  }
 
   @override
   void initState() {
@@ -572,73 +582,92 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   Future<void> _importDataFromCsv() async {
     final db = AppDatabase.instance;
 
-    Directory? downloadsDir;
-    if (Platform.isAndroid) {
-      downloadsDir = Directory('/storage/emulated/0/Download');
-    } else if (Platform.isIOS) {
-      downloadsDir = await getApplicationDocumentsDirectory();
+    // Let user pick a CSV file
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+
+    if (result == null || result.files.single.path == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("CSV import cancelled")),
+        );
+      }
+      return;
     }
 
-    if (!downloadsDir!.existsSync()) return;
+    final filePath = result.files.single.path!;
+    final file = File(filePath);
+    final csvString = await file.readAsString();
 
-    final csvFiles = downloadsDir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.csv') && f.path.contains('FitAppData_'))
-        .toList();
-
-    if (csvFiles.isEmpty) return;
-
-    csvFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-    final latestFile = csvFiles.first;
-
-    final csvString = await latestFile.readAsString();
     final rows = const CsvToListConverter().convert(csvString, eol: '\n');
+    if (rows.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("CSV file is empty")),
+        );
+      }
+      return;
+    }
 
-    if (rows.isEmpty) return;
-
-    final headers = rows.first.cast<String>();
+    final headers = rows.first.map((e) => _s(e)).toList();
     final dataRows = rows.sublist(1);
 
     final allExercises = await db.getAllExercises();
-    final Map<String, ExerciseModel> exerciseMap = { for (var e in allExercises) e.name: e };
+    final Map<String, ExerciseModel> exerciseMap = {
+      for (var e in allExercises) e.name: e
+    };
 
     for (final row in dataRows) {
-      final Map<String, dynamic> rowMap = Map.fromIterables(headers, row);
+      final rowMap = Map.fromIterables(headers, row);
 
-      final exerciseName = rowMap['exercise_name'] as String;
+      final exerciseName = _s(rowMap['exercise_name']);
+      if (exerciseName.isEmpty) continue;
+
       ExerciseModel? exercise = exerciseMap[exerciseName];
 
       if (exercise == null) {
-        final primaryMuscles = (rowMap['primary_muscle_ids'] as String).split(',').map((s) => int.parse(s.trim())).toList();
-        final secondaryMuscles = (rowMap['secondary_muscle_ids'] as String).isNotEmpty
-            ? (rowMap['secondary_muscle_ids'] as String).split(',').map((s) => int.parse(s.trim())).toList()
+        final primary = _s(rowMap['primary_muscle_ids'])
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map((e) => int.tryParse(e) ?? 0)
+            .toList();
+
+        final secondaryString = _s(rowMap['secondary_muscle_ids']);
+        final secondary = secondaryString.isNotEmpty
+            ? secondaryString
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map((e) => int.tryParse(e) ?? 0)
+            .toList()
             : null;
 
         exercise = ExerciseModel(
           name: exerciseName,
-          primaryMuscleIDs: primaryMuscles,
-          secondaryMuscleIDs: secondaryMuscles,
+          primaryMuscleIDs: primary,
+          secondaryMuscleIDs: secondary,
         );
 
         final newId = await db.insertExercise(exercise);
         exercise = ExerciseModel(
           id: newId,
           name: exerciseName,
-          primaryMuscleIDs: primaryMuscles,
-          secondaryMuscleIDs: secondaryMuscles,
+          primaryMuscleIDs: primary,
+          secondaryMuscleIDs: secondary,
         );
+
         exerciseMap[exerciseName] = exercise;
       }
 
       final set = SetModel(
         exerciseId: exercise.id!,
-        setNumber: rowMap['set_number'] is int ? rowMap['set_number'] : int.parse(rowMap['set_number'].toString()),
-        weight: rowMap['weight'] is double ? rowMap['weight'] : double.parse(rowMap['weight'].toString()),
-        reps: rowMap['reps'] is int ? rowMap['reps'] : int.parse(rowMap['reps'].toString()),
-        workTime: rowMap['work_time'] is int ? rowMap['work_time'] : int.parse(rowMap['work_time'].toString()),
-        restTime: rowMap['rest_time'] is int ? rowMap['rest_time'] : int.parse(rowMap['rest_time'].toString()),
-        timestamp: DateTime.parse(rowMap['timestamp'] as String),
+        setNumber: _i(rowMap['set_number']),
+        weight: _d(rowMap['weight']),
+        reps: _i(rowMap['reps']),
+        workTime: _i(rowMap['work_time']),
+        restTime: _i(rowMap['rest_time']),
+        timestamp: _dt(rowMap['timestamp']),
       );
 
       await db.insertSet(set);
@@ -646,9 +675,9 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CSV data imported from: ${latestFile.path.split('/').last}')),
+        SnackBar(content: Text("CSV imported:\n$filePath")),
       );
     }
-    print('CSV imported from: ${latestFile.path}');
   }
+
 }

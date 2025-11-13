@@ -97,56 +97,46 @@ class AppDatabase {
       ExerciseModel(primaryMuscleIDs: [1,3], secondaryMuscleIDs: [4,6], name: 'Dumbbell Shrugs', image: 'assets/images/back.png'),
       ExerciseModel(primaryMuscleIDs: [1,10], secondaryMuscleIDs: [], name: 'Back Extensions', image: 'assets/images/back.png'),
       ExerciseModel(primaryMuscleIDs: [1], secondaryMuscleIDs: [4,6], name: 'Scapular Pull-Ups', image: 'assets/images/back.png'),
-
       // Chest
       ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Push-Ups', image: 'assets/images/chest.png'),
       ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Bench Press', image: 'assets/images/chest.png'),
       ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [5,6], name: 'Incline Press', image: 'assets/images/chest.png'),
       ExerciseModel(primaryMuscleIDs: [2,3], secondaryMuscleIDs: [6], name: 'Peck Deck Fly', image: 'assets/images/chest.png'),
-
       // Shoulders
       ExerciseModel(primaryMuscleIDs: [3], secondaryMuscleIDs: [4,5,6], name: 'Lateral Raise', image: 'assets/images/shoulders.png'),
       ExerciseModel(primaryMuscleIDs: [3,1], secondaryMuscleIDs: [6], name: 'Bent-Over Lateral Raise', image: 'assets/images/shoulders.png'),
       ExerciseModel(primaryMuscleIDs: [3,2], secondaryMuscleIDs: [5,6], name: 'Standing Front Press', image: 'assets/images/shoulders.png'),
       ExerciseModel(primaryMuscleIDs: [3,2], secondaryMuscleIDs: [6], name: 'Cable Lateral Raise', image: 'assets/images/shoulders.png'),
       ExerciseModel(primaryMuscleIDs: [3,1], secondaryMuscleIDs: [6], name: 'Standing Face Pull', image: 'assets/images/shoulders.png'),
-
       // Biceps
       ExerciseModel(primaryMuscleIDs: [4], secondaryMuscleIDs: [1,6], name: 'Chin-Ups', image: 'assets/images/biceps.png'),
       ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Barbell Curl', image: 'assets/images/biceps.png'),
       ExerciseModel(primaryMuscleIDs: [4,6], secondaryMuscleIDs: [], name: 'Dumbbell Curl', image: 'assets/images/biceps.png'),
-
       // Triceps
       ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'),
       ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Push-Down', image: 'assets/images/triceps.png'),
       ExerciseModel(primaryMuscleIDs: [5], secondaryMuscleIDs: [2,3,6], name: 'Rope Press Down', image: 'assets/images/triceps.png'),
-
       // Forearms
       ExerciseModel(primaryMuscleIDs: [6, 4], secondaryMuscleIDs: [], name: 'Hammer Curl', image: 'assets/images/forearms.png'),
       ExerciseModel(primaryMuscleIDs: [6, 4], secondaryMuscleIDs: [], name: 'Reverse Barbell Curl', image: 'assets/images/forearms.png'),
-
       // Abdomen
       ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'),
       ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Sit-Ups', image: 'assets/images/abdomen.png'),
       ExerciseModel(primaryMuscleIDs: [7,9], secondaryMuscleIDs: [], name: 'Leg Raise', image: 'assets/images/abdomen.png'),
       ExerciseModel(primaryMuscleIDs: [7,9], secondaryMuscleIDs: [], name: 'Bar Leg Raise', image: 'assets/images/abdomen.png'),
       ExerciseModel(primaryMuscleIDs: [7], secondaryMuscleIDs: [], name: 'Plank', image: 'assets/images/abdomen.png'),
-
       // Glutes
       ExerciseModel(primaryMuscleIDs: [8,9], secondaryMuscleIDs: [10], name: 'Squat', image: 'assets/images/glutes.png'),
       ExerciseModel(primaryMuscleIDs: [8,9], secondaryMuscleIDs: [], name: 'Hip Thrust', image: 'assets/images/glutes.png'),
       ExerciseModel(primaryMuscleIDs: [8,10], secondaryMuscleIDs: [], name: 'Glute Kickback', image: 'assets/images/glutes.png'),
-
       // Quadriceps
       ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [10], name: 'Leg Extension', image: 'assets/images/quadriceps.png'),
       ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [10], name: 'Dumbbell Lunges', image: 'assets/images/quadriceps.png'),
       ExerciseModel(primaryMuscleIDs: [9,8], secondaryMuscleIDs: [], name: 'Hack Squat', image: 'assets/images/quadriceps.png'),
-
       // Hamstrings
       ExerciseModel(primaryMuscleIDs: [10,8], secondaryMuscleIDs: [9], name: 'Romanian Deadlift', image: 'assets/images/hamstrings.png'),
       ExerciseModel(primaryMuscleIDs: [10], secondaryMuscleIDs: [8], name: 'Leg Curl', image: 'assets/images/hamstrings.png'),
       ExerciseModel(primaryMuscleIDs: [10,8], secondaryMuscleIDs: [9], name: 'Good Morning', image: 'assets/images/hamstrings.png'),
-
       // Calves
       ExerciseModel(primaryMuscleIDs: [11], secondaryMuscleIDs: [9,10], name: 'Standing Calf Raise', image: 'assets/images/calves.png'),
       ExerciseModel(primaryMuscleIDs: [11], secondaryMuscleIDs: [9,10], name: 'Seated Calf Raise', image: 'assets/images/calves.png'),
@@ -155,6 +145,46 @@ class AppDatabase {
     for (final exercise in exercises) {
       await db.insert('exercises', exercise.toMap());
     }
+
+    // id: 1, name: 'Pull-Up', image: 'assets/images/back.png'
+    // id: 2, name: 'Deadlifts', image: 'assets/images/back.png'
+    // id: 3, name: 'Barbell Bent-over Row', image: 'assets/images/back.png'
+    // id: 4, name: 'Dumbbell Shrugs', image: 'assets/images/back.png'
+    // id: 5, name: 'Back Extensions', image: 'assets/images/back.png'
+    // id: 6, name: 'Scapular Pull-Ups', image: 'assets/images/back.png'
+    // id: 7, name: 'Push-Ups', image: 'assets/images/chest.png'
+    // id: 8, name: 'Bench Press', image: 'assets/images/chest.png'
+    // id: 9, name: 'Incline Press', image: 'assets/images/chest.png'
+    // id: 10, name: 'Peck Deck Fly', image: 'assets/images/chest.png'
+    // id: 11, name: 'Lateral Raise', image: 'assets/images/shoulders.png'
+    // id: 12, name: 'Bent-Over Lateral Raise', image: 'assets/images/shoulders.png'
+    // id: 13, name: 'Standing Front Press', image: 'assets/images/shoulders.png'
+    // id: 14, name: 'Cable Lateral Raise', image: 'assets/images/shoulders.png'
+    // id: 15, name: 'Standing Face Pull', image: 'assets/images/shoulders.png'
+    // id: 16, name: 'Chin-Ups', image: 'assets/images/biceps.png'
+    // id: 17, name: 'Barbell Curl', image: 'assets/images/biceps.png'
+    // id: 18, name: 'Dumbbell Curl', image: 'assets/images/biceps.png'
+    // id: 19, name: 'Parallel Bar Dips', image: 'assets/images/triceps.png'
+    // id: 20, name: 'Push-Down', image: 'assets/images/triceps.png'
+    // id: 21, name: 'Rope Press Down', image: 'assets/images/triceps.png'
+    // id: 22, name: 'Hammer Curl', image: 'assets/images/forearms.png'
+    // id: 23, name: 'Reverse Barbell Curl', image: 'assets/images/forearms.png'
+    // id: 24, name: 'Incline Bench Sit-Ups', image: 'assets/images/abdomen.png'
+    // id: 25, name: 'Sit-Ups', image: 'assets/images/abdomen.png'
+    // id: 26, name: 'Leg Raise', image: 'assets/images/abdomen.png'
+    // id: 27, name: 'Bar Leg Raise', image: 'assets/images/abdomen.png'
+    // id: 28, name: 'Plank', image: 'assets/images/abdomen.png'
+    // id: 29, name: 'Squat', image: 'assets/images/glutes.png'
+    // id: 30, name: 'Hip Thrust', image: 'assets/images/glutes.png'
+    // id: 31, name: 'Glute Kickback', image: 'assets/images/glutes.png'
+    // id: 32, name: 'Leg Extension', image: 'assets/images/quadriceps.png'
+    // id: 33, name: 'Dumbbell Lunges', image: 'assets/images/quadriceps.png'
+    // id: 34, name: 'Hack Squat', image: 'assets/images/quadriceps.png'
+    // id: 35, name: 'Romanian Deadlift', image: 'assets/images/hamstrings.png'
+    // id: 36, name: 'Leg Curl', image: 'assets/images/hamstrings.png'
+    // id: 37, name: 'Good Morning', image: 'assets/images/hamstrings.png'
+    // id: 38, name: 'Standing Calf Raise', image: 'assets/images/calves.png'
+    // id: 39, name: 'Seated Calf Raise', image: 'assets/images/calves.png'
   }
 
   // ====== SETS CRUD ======
