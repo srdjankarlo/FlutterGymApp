@@ -41,7 +41,9 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
   }
 
   void _loadSets() async {
-    _setsFuture = _getSetsWithExerciseNames();
+    setState(() {
+      _setsFuture = _getSetsWithExerciseNames();
+    });
   }
 
   /// Fetch all sets and map each to its exercise name
@@ -367,18 +369,11 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                             child: GestureDetector(
                               onTap: () async {
                                 // Open edit dialog
-                                final editedSet = await showDialog<SetModel>(
+                                final result = await showDialog(
                                   context: context,
                                   builder: (_) => EditSetDialog(set: set, unit: unit),
                                 );
-
-                                // Refresh sets
-                                if (editedSet != null) {
-                                  await AppDatabase.instance.updateSet(editedSet);
-                                  setState(() {
-                                    _loadSets();
-                                  });
-                                }
+                                _loadSets();
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
@@ -589,11 +584,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     );
 
     if (result == null || result.files.single.path == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("CSV import cancelled")),
-        );
-      }
+      if (mounted) _showMessage("CSV import cancelled");
       return;
     }
 
@@ -603,11 +594,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
 
     final rows = const CsvToListConverter().convert(csvString, eol: '\n');
     if (rows.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("CSV file is empty")),
-        );
-      }
+      if (mounted) _showMessage("CSV file is empty");
       return;
     }
 
@@ -618,6 +605,8 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     final Map<String, ExerciseModel> exerciseMap = {
       for (var e in allExercises) e.name: e
     };
+
+    final List<SetModel> setsToInsert = [];
 
     for (final row in dataRows) {
       final rowMap = Map.fromIterables(headers, row);
@@ -670,13 +659,20 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
         timestamp: _dt(rowMap['timestamp']),
       );
 
+      setsToInsert.add(set);
+    }
+
+    // Batch insert all sets at once
+    for (final set in setsToInsert) {
       await db.insertSet(set);
     }
 
+    // Refresh UI after import
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("CSV imported:\n$filePath")),
-      );
+      setState(() {
+        _loadSets(); // reload sets so FutureBuilder updates
+      });
+      _showMessage("CSV imported: $filePath (${setsToInsert.length} sets)");
     }
   }
 

@@ -231,7 +231,7 @@ class _SetsPageState extends State<SetsPage> {
             ),
             endDrawer: const SetsSettingsDrawer(),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(8),
+              // padding: const EdgeInsets.all(8),
               child: Column(
                 children: [
                   // ===== Input Section =====
@@ -255,28 +255,28 @@ class _SetsPageState extends State<SetsPage> {
                                     backgroundColor: _isWorkRunning
                                         ? Colors.red   // Stop = red
                                         : Colors.green, // Start = green
-                                    padding: const EdgeInsets.symmetric(vertical: 25),
+                                    padding: const EdgeInsets.symmetric(vertical: 30),
                                   ),
                                   child: Text(
                                     _isWorkRunning ? 'Stop Workout' : 'Start Workout',
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                                    style: const TextStyle(color: Colors.white, fontSize: 22),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(_formatDuration(_currentWorkTime), 10, 25),
+                              _valueBox(_formatDuration(_currentWorkTime), 10, 30),
                               const SizedBox(width: 4),
                               ElevatedButton(
                                 onPressed: () => _resetStopwatch(isWork: true),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
                                 ),
                                 child: const Text(
                                   'Reset',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
+                                  style: TextStyle(fontSize: 22),
                                 ),
                               ),
                             ],
@@ -291,10 +291,10 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _setController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 25),
+                                  style: const TextStyle(fontSize: 30),
                                   decoration: const InputDecoration(
                                     hintText: 'Set', // this text disappears when typing
-                                    hintStyle: TextStyle(fontSize: 25),
+                                    hintStyle: TextStyle(fontSize: 30),
                                     border: OutlineInputBorder(),
                                     isDense: true, // compact spacing
                                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 6),
@@ -308,10 +308,10 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _weightController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 25),
+                                  style: const TextStyle(fontSize: 30),
                                   decoration: InputDecoration(
                                     hintText: 'Weight ($_unit)', // dynamic placeholder
-                                    hintStyle: TextStyle(fontSize: 25),
+                                    hintStyle: TextStyle(fontSize: 30),
                                     border: const OutlineInputBorder(),
                                     isDense: true,
                                     contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
@@ -325,10 +325,10 @@ class _SetsPageState extends State<SetsPage> {
                                   controller: _repsController,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 25),
+                                  style: const TextStyle(fontSize: 30),
                                   decoration: const InputDecoration(
                                     hintText: 'Reps',
-                                    hintStyle: TextStyle(fontSize: 25),
+                                    hintStyle: TextStyle(fontSize: 30),
                                     border: OutlineInputBorder(),
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 6),
@@ -348,28 +348,28 @@ class _SetsPageState extends State<SetsPage> {
                                     backgroundColor: _isRestRunning
                                         ? Colors.red   // Stop = red
                                         : Colors.green, // Start = green
-                                    padding: const EdgeInsets.symmetric(vertical: 25),
+                                    padding: const EdgeInsets.symmetric(vertical: 30),
                                   ),
                                   child: Text(
                                     _isRestRunning ? 'Stop Rest' : 'Start Rest',
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                                    style: const TextStyle(color: Colors.white, fontSize: 22),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              _valueBox(_formatDuration(_currentRestTime), 10, 25),
+                              _valueBox(_formatDuration(_currentRestTime), 10, 30),
                               const SizedBox(width: 4),
                               ElevatedButton(
                                 onPressed: () => _resetStopwatch(isWork: false),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
                                 ),
                                 child: const Text(
                                   'Reset',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
+                                  style: TextStyle(fontSize: 22),
                                 ),
                               ),
                             ],
@@ -382,9 +382,11 @@ class _SetsPageState extends State<SetsPage> {
                               onPressed: () => _inputSetData(unitProvider),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryColor,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 20),
                               ),
-                              child: const Text('Input Set Data'),
+                              child: const Text('Input Set Data',
+                                style: TextStyle(fontSize: 22),
+                              ),
                             ),
                           ),
                         ],
