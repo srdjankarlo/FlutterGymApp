@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../pages/plots_page.dart';
+
 class SetsSettingsDrawer extends StatefulWidget {
-  const SetsSettingsDrawer({super.key});
+  final int exerciseId;
+  final dynamic exerciseName;
+  final dynamic isMetric;
+
+  const SetsSettingsDrawer({
+    super.key,
+    required this.exerciseId,
+    required this.exerciseName,
+    required this.isMetric,
+  });
 
   @override
   State<SetsSettingsDrawer> createState() => _SetsSettingsDrawerState();
@@ -149,6 +160,12 @@ class _SetsSettingsDrawerState extends State<SetsSettingsDrawer> {
             leading: const Icon(Icons.bar_chart),
             onTap: () {
               // TODO: navigate to plots page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PlotsPage(exerciseId: widget.exerciseId, exerciseName: widget.exerciseName, isMetric: widget.isMetric,),
+                ),
+              );
             },
           ),
           ListTile(

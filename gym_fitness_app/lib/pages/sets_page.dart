@@ -229,7 +229,7 @@ class _SetsPageState extends State<SetsPage> {
                 ),
               ],
             ),
-            endDrawer: const SetsSettingsDrawer(),
+            endDrawer: SetsSettingsDrawer(exerciseId: widget.exerciseId, exerciseName: widget.exerciseName, isMetric: widget.unitSetting),
             body: SingleChildScrollView(
               // padding: const EdgeInsets.all(8),
               child: Column(
