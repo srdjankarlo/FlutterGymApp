@@ -369,7 +369,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
                             child: GestureDetector(
                               onTap: () async {
                                 // Open edit dialog
-                                final result = await showDialog(
+                                await showDialog(
                                   context: context,
                                   builder: (_) => EditSetDialog(set: set, unit: unit),
                                 );
@@ -663,15 +663,11 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
     }
 
     // Batch insert all sets at once
-    for (final set in setsToInsert) {
-      await db.insertSet(set);
-    }
+    await db.insertSetsBatch(setsToInsert);
 
     // Refresh UI after import
     if (mounted) {
-      setState(() {
-        _loadSets(); // reload sets so FutureBuilder updates
-      });
+      _loadSets();
       _showMessage("CSV imported: $filePath (${setsToInsert.length} sets)");
     }
   }

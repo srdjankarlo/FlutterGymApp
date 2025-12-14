@@ -229,6 +229,17 @@ class AppDatabase {
     );
   }
 
+  Future<void> insertSetsBatch(List<SetModel> sets) async {
+    final db = await database;
+    final batch = db.batch();
+
+    for (final set in sets) {
+      batch.insert('sets', set.toMap());
+    }
+
+    await batch.commit(noResult: true);
+  }
+
   // ====== MUSCLES ======
   Future<List<MuscleModel>> getAllMuscles() async {
     final db = await instance.database;
