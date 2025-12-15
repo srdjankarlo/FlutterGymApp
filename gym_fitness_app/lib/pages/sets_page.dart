@@ -219,7 +219,7 @@ class _SetsPageState extends State<SetsPage> {
         builder: (context, unitProvider, child) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('${widget.exerciseName}: Input Set'),
+              title: Text(widget.exerciseName),
               actions: [
                 Builder(
                   builder: (context) => IconButton(

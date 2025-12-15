@@ -92,6 +92,7 @@ class _PlotsPageState extends State<PlotsPage> {
                   data,
                   _topCtrl,
                   _buildWeightRepsChart,
+                  legendItems: [LegendItem('Weight', Colors.red), LegendItem('Reps', Colors.green)],
                 ),
               ),
               Expanded(
@@ -100,6 +101,7 @@ class _PlotsPageState extends State<PlotsPage> {
                   data,
                   _bottomCtrl,
                   _buildWorkRestChart,
+                  legendItems: [LegendItem('Work', Colors.red), LegendItem('Rest', Colors.green)],
                 ),
               ),
             ],
@@ -113,18 +115,16 @@ class _PlotsPageState extends State<PlotsPage> {
       BuildContext context,
       List<SetModel> data,
       ScrollController controller,
-      Widget Function(List<SetModel>) builder,
+      Widget Function(List<SetModel>) builder, {
+      required List<LegendItem> legendItems,}
       ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final pointWidth = screenWidth / maxVisiblePoints;
     final chartWidth = max(data.length * pointWidth, screenWidth);
 
-    return Row(
+    return Column(
       children: [
-        SizedBox(
-          width: 56,
-          child: _buildYAxis(data, builder == _buildWeightRepsChart),
-        ),
+        _buildLegend(legendItems),
         Expanded(
           child: SingleChildScrollView(
             controller: controller,
@@ -298,4 +298,29 @@ class _Series {
     required this.line,
     required this.statLines,
   });
+}
+
+class LegendItem {
+  final String label;
+  final Color color;
+  LegendItem(this.label, this.color);
+}
+
+Widget _buildLegend(List<LegendItem> items) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        const SizedBox(width: 56),
+        ...items.map((item) => Row(
+          children: [
+            Container(width: 12, height: 12, color: item.color),
+            const SizedBox(width: 6),
+            Text(item.label, style: const TextStyle(fontSize: 12)),
+            const SizedBox(width: 12),
+          ],
+        )),
+      ],
+    ),
+  );
 }
