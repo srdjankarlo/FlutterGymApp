@@ -151,15 +151,9 @@ class _SetsSettingsDrawerState extends State<SetsSettingsDrawer> {
             ),
           ),
           ListTile(
-            title: const Text('Input Set (current)'),
-            leading: const Icon(Icons.edit),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
             title: const Text('Plots'),
             leading: const Icon(Icons.bar_chart),
             onTap: () {
-              // TODO: navigate to plots page
               Navigator.push(
                 context,
                 MaterialPageRoute(

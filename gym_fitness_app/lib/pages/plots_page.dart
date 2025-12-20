@@ -27,7 +27,9 @@ class _PlotsPageState extends State<PlotsPage> {
   late Future<List<SetModel>> _setsFuture;
 
   final ScrollController _topCtrl = ScrollController();
+  final ScrollController _middleCtrl = ScrollController();
   final ScrollController _bottomCtrl = ScrollController();
+  late final List<ScrollController> _controllers;
   bool _syncing = false;
 
   @override
@@ -35,18 +37,27 @@ class _PlotsPageState extends State<PlotsPage> {
     super.initState();
     _setsFuture = AppDatabase.instance.getSetsByExercise(widget.exerciseId);
 
-    _topCtrl.addListener(() => _syncScroll(_topCtrl, _bottomCtrl));
-    _bottomCtrl.addListener(() => _syncScroll(_bottomCtrl, _topCtrl));
+    _controllers = [_topCtrl, _middleCtrl, _bottomCtrl];
+
+    for (final ctrl in _controllers) {
+      ctrl.addListener(() => _onScroll(ctrl));
+    }
   }
 
-  void _syncScroll(ScrollController from, ScrollController to) {
+  void _onScroll(ScrollController source) {
     if (_syncing) return;
+    if (!source.hasClients) return;
+
     _syncing = true;
-    if (to.hasClients) {
-      to.jumpTo(from.offset);
+
+    for (final ctrl in _controllers) {
+      if (ctrl == source || !ctrl.hasClients) continue;
+      ctrl.jumpTo(source.offset);
     }
+
     _syncing = false;
   }
+
 
   // ---------- HELPERS ----------
 
@@ -91,8 +102,17 @@ class _PlotsPageState extends State<PlotsPage> {
                   context,
                   data,
                   _topCtrl,
+                  _buildVolumeChart,
+                  legendItems: [LegendItem('Volume', Colors.red)],
+                ),
+              ),
+              Expanded(
+                child: _buildChartBlock(
+                  context,
+                  data,
+                  _middleCtrl,
                   _buildWeightRepsChart,
-                  legendItems: [LegendItem('Weight', Colors.red), LegendItem('Reps', Colors.green)],
+                  legendItems: [LegendItem('Weight[${_weightUnit()}]', Colors.red), LegendItem('Reps', Colors.green)],
                 ),
               ),
               Expanded(
@@ -101,7 +121,7 @@ class _PlotsPageState extends State<PlotsPage> {
                   data,
                   _bottomCtrl,
                   _buildWorkRestChart,
-                  legendItems: [LegendItem('Work', Colors.red), LegendItem('Rest', Colors.green)],
+                  legendItems: [LegendItem('Work[s]', Colors.red), LegendItem('Rest[s]', Colors.green)],
                 ),
               ),
             ],
@@ -166,6 +186,22 @@ class _PlotsPageState extends State<PlotsPage> {
   }
 
   // ---------- CHARTS ----------
+  Widget _buildVolumeChart(List<SetModel> data) {
+    final reps = data.map((e) => e.reps.toDouble()).toList();
+    final weights =
+    data.map((e) => _toDisplayWeight(e.weight)).toList();
+    List<double> volume = reps.asMap().entries.map((e) {
+      int index = e.key;
+      double val1 = e.value;
+      double val2 = weights[index];
+      return val1 * val2;
+    }).toList();
+
+    return _lineChart(
+      data,
+      [_lineWithStats(volume, Colors.grey)]
+    );
+  }
 
   Widget _buildWeightRepsChart(List<SetModel> data) {
     final reps = data.map((e) => e.reps.toDouble()).toList();
@@ -212,7 +248,36 @@ class _PlotsPageState extends State<PlotsPage> {
         maxX: data.length + 0.5,
         minY: 0,
         maxY: maxY,
+
         clipData: FlClipData.none(),
+
+        lineTouchData: LineTouchData(
+          handleBuiltInTouches: true,
+          touchTooltipData: LineTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
+            tooltipMargin: 8,
+            tooltipRoundedRadius: 6,
+            getTooltipItems: (spots) {
+              return spots.map((spot) {
+                final lineColor =
+                    spot.bar.gradient?.colors.first ??
+                        spot.bar.color ??
+                        Colors.white;
+
+                return LineTooltipItem(
+                  spot.y.toStringAsFixed(1),
+                  TextStyle(
+                    color: lineColor, // 🔥 SAME COLOR AS THE LINE
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
