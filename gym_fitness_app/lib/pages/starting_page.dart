@@ -9,7 +9,7 @@ class StartingPage extends StatelessWidget {
 
   final List<String> menuItems = const [
     'Muscles',
-    'Training Plans',
+    // 'Training Plans', ToDo
     'Exercise Log',
     'Personal Records'
   ];

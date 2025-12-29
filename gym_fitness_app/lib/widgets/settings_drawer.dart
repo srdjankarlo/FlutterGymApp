@@ -29,11 +29,11 @@ class SettingsDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // --- Language (placeholder) ---
-          ListTile(
-            title: const Text('Language'),
-            onTap: () {},
-          ),
+          // --- Language (placeholder) --- ToDo
+          // ListTile(
+          //   title: const Text('Language'),
+          //   onTap: () {},
+          // ),
 
           // --- Preferred Unit Selection ---
           Padding(
@@ -84,11 +84,11 @@ class SettingsDrawer extends StatelessWidget {
             onTap: () => _showColorSchemeDialog(context, themeProvider),
           ),
 
-          // --- Donate (placeholder) ---
-          ListTile(
-            title: const Text('Donate'),
-            onTap: () {},
-          ),
+          // --- Donate (placeholder) --- ToDo
+          // ListTile(
+          //   title: const Text('Donate'),
+          //   onTap: () {},
+          // ),
         ],
       ),
     );
