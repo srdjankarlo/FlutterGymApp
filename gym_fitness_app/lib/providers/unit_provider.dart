@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UnitProvider extends ChangeNotifier {
-  String _unit = 'Metric';
+  String _unit = 'kg';
   String get unit => _unit;
 
   UnitProvider() {
@@ -11,7 +11,7 @@ class UnitProvider extends ChangeNotifier {
 
   Future<void> _loadUnit() async {
     final prefs = await SharedPreferences.getInstance();
-    _unit = prefs.getString('preferred_unit') ?? 'Metric';
+    _unit = prefs.getString('preferred_unit') ?? 'kg';
     notifyListeners();
   }
 
@@ -23,6 +23,6 @@ class UnitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isMetric => _unit == 'Metric';
-  bool get isImperial => _unit == 'Imperial';
+  bool get isMetric => _unit == 'kg';
+  bool get isImperial => _unit == 'lbs';
 }

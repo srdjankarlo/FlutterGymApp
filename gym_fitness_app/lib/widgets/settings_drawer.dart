@@ -50,7 +50,7 @@ class SettingsDrawer extends StatelessWidget {
                   spacing: 10,
                   children: [
                     ChoiceChip(
-                      label: const Text('Metric'),
+                      label: const Text('kg'),
                       selected: unitProvider.isMetric,
                       selectedColor: Theme.of(context).colorScheme.primary,
                       labelStyle: TextStyle(
@@ -58,10 +58,10 @@ class SettingsDrawer extends StatelessWidget {
                             ? Colors.white
                             : Theme.of(context).colorScheme.onSurface,
                       ),
-                      onSelected: (_) => unitProvider.setUnit('Metric'),
+                      onSelected: (_) => unitProvider.setUnit('kg'),
                     ),
                     ChoiceChip(
-                      label: const Text('Imperial'),
+                      label: const Text('lbs'),
                       selected: unitProvider.isImperial,
                       selectedColor: Theme.of(context).colorScheme.primary,
                       labelStyle: TextStyle(
@@ -69,7 +69,7 @@ class SettingsDrawer extends StatelessWidget {
                             ? Colors.white
                             : Theme.of(context).colorScheme.onSurface,
                       ),
-                      onSelected: (_) => unitProvider.setUnit('Imperial'),
+                      onSelected: (_) => unitProvider.setUnit('lbs'),
                     ),
                   ],
                 ),

@@ -2,19 +2,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../database/app_database.dart';
 import '../models/set_model.dart';
+import '../providers/unit_provider.dart';
 
 class PlotsPage extends StatefulWidget {
   final int exerciseId;
   final String exerciseName;
-  final String isMetric; // "kg" or "lbs"
 
   const PlotsPage({
     super.key,
     required this.exerciseId,
     required this.exerciseName,
-    required this.isMetric,
   });
 
   @override
@@ -26,9 +26,9 @@ class _PlotsPageState extends State<PlotsPage> {
 
   late Future<List<SetModel>> _setsFuture;
 
-  final ScrollController _topCtrl = ScrollController();
-  final ScrollController _middleCtrl = ScrollController();
-  final ScrollController _bottomCtrl = ScrollController();
+  final _topCtrl = ScrollController();
+  final _middleCtrl = ScrollController();
+  final _bottomCtrl = ScrollController();
   late final List<ScrollController> _controllers;
   bool _syncing = false;
 
@@ -45,9 +45,7 @@ class _PlotsPageState extends State<PlotsPage> {
   }
 
   void _onScroll(ScrollController source) {
-    if (_syncing) return;
-    if (!source.hasClients) return;
-
+    if (_syncing || !source.hasClients) return;
     _syncing = true;
 
     for (final ctrl in _controllers) {
@@ -61,10 +59,10 @@ class _PlotsPageState extends State<PlotsPage> {
 
   // ---------- HELPERS ----------
 
-  double _toDisplayWeight(double kg) =>
-      widget.isMetric == "kg" ? kg : kg * 2.20462;
+  double _toDisplayWeight(double kg, bool isMetric) =>
+      isMetric ? kg : kg * 2.20462;
 
-  String _weightUnit() => widget.isMetric;
+  String _weightUnit(bool isMetric) => isMetric ? 'kg' : 'lbs';
 
   Set<int> _firstSetIndexPerDay(List<SetModel> data) {
     final seen = <String>{};
@@ -81,6 +79,8 @@ class _PlotsPageState extends State<PlotsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMetric = context.watch<UnitProvider>().isMetric;
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.exerciseName)),
       body: FutureBuilder<List<SetModel>>(
@@ -102,7 +102,7 @@ class _PlotsPageState extends State<PlotsPage> {
                   context,
                   data,
                   _topCtrl,
-                  _buildVolumeChart,
+                  (d) => _buildVolumeChart(d, isMetric),
                   legendItems: [LegendItem('Volume', Colors.red)],
                 ),
               ),
@@ -111,8 +111,11 @@ class _PlotsPageState extends State<PlotsPage> {
                   context,
                   data,
                   _middleCtrl,
-                  _buildWeightRepsChart,
-                  legendItems: [LegendItem('Weight[${_weightUnit()}]', Colors.red), LegendItem('Reps', Colors.green)],
+                      (d) => _buildWeightRepsChart(d, isMetric),
+                  legendItems: [
+                    LegendItem('Weight [${_weightUnit(isMetric)}]', Colors.red),
+                    LegendItem('Reps', Colors.green),
+                  ],
                 ),
               ),
               Expanded(
@@ -160,42 +163,13 @@ class _PlotsPageState extends State<PlotsPage> {
     );
   }
 
-  // ---------- Y AXIS ----------
-  Widget _buildYAxis(List<SetModel> data, bool isWeight) {
-    final values = isWeight
-        ? data.map((e) => _toDisplayWeight(e.weight)).toList()
-        : [
-      ...data.map((e) => e.workTime.toDouble()),
-      ...data.map((e) => e.restTime.toDouble()),
-    ];
-
-    final maxY = values.reduce(max) * 1.25;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(5, (i) {
-        final v = maxY * (1 - i / 4);
-        return Text(
-          isWeight
-              ? v.toStringAsFixed(0)
-              : '${v.toStringAsFixed(0)}s',
-          style: const TextStyle(fontSize: 10),
-        );
-      }),
-    );
-  }
-
   // ---------- CHARTS ----------
-  Widget _buildVolumeChart(List<SetModel> data) {
+  Widget _buildVolumeChart(List<SetModel> data, bool isMetric) {
     final reps = data.map((e) => e.reps.toDouble()).toList();
     final weights =
-    data.map((e) => _toDisplayWeight(e.weight)).toList();
-    List<double> volume = reps.asMap().entries.map((e) {
-      int index = e.key;
-      double val1 = e.value;
-      double val2 = weights[index];
-      return val1 * val2;
-    }).toList();
+    data.map((e) => _toDisplayWeight(e.weight, isMetric)).toList();
+
+    final volume = List.generate(reps.length, (i) => reps[i] * weights[i]);
 
     return _lineChart(
       data,
@@ -203,10 +177,10 @@ class _PlotsPageState extends State<PlotsPage> {
     );
   }
 
-  Widget _buildWeightRepsChart(List<SetModel> data) {
+  Widget _buildWeightRepsChart(List<SetModel> data, bool isMetric) {
     final reps = data.map((e) => e.reps.toDouble()).toList();
     final weights =
-    data.map((e) => _toDisplayWeight(e.weight)).toList();
+    data.map((e) => _toDisplayWeight(e.weight, isMetric)).toList();
 
     return _lineChart(
       data,
@@ -232,14 +206,8 @@ class _PlotsPageState extends State<PlotsPage> {
 
   // ---------- CORE ----------
 
-  Widget _lineChart(
-      List<SetModel> data,
-      List<_Series> series,
-      ) {
-    final allValues =
-    series.expand((s) => s.values).toList();
-
-    final maxY = allValues.reduce(max) * 1.25;
+  Widget _lineChart(List<SetModel> data, List<_Series> series,) {
+    final maxY = series.expand((s) => s.values).reduce(max) * 1.25;
     final labelIndices = _firstSetIndexPerDay(data);
 
     return LineChart(
@@ -248,9 +216,7 @@ class _PlotsPageState extends State<PlotsPage> {
         maxX: data.length + 0.5,
         minY: 0,
         maxY: maxY,
-
         clipData: FlClipData.none(),
-
         lineTouchData: LineTouchData(
           handleBuiltInTouches: true,
           touchTooltipData: LineTouchTooltipData(
@@ -268,7 +234,7 @@ class _PlotsPageState extends State<PlotsPage> {
                 return LineTooltipItem(
                   spot.y.toStringAsFixed(1),
                   TextStyle(
-                    color: lineColor, // 🔥 SAME COLOR AS THE LINE
+                    color: lineColor, // SAME COLOR AS THE LINE
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -277,7 +243,6 @@ class _PlotsPageState extends State<PlotsPage> {
             },
           ),
         ),
-
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
@@ -373,10 +338,9 @@ class LegendItem {
 
 Widget _buildLegend(List<LegendItem> items) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.only(left: 12),
     child: Row(
       children: [
-        const SizedBox(width: 56),
         ...items.map((item) => Row(
           children: [
             Container(width: 12, height: 12, color: item.color),

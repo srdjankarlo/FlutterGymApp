@@ -42,105 +42,105 @@ class _SetsSettingsDrawerState extends State<SetsSettingsDrawer> {
           const Divider(),
 
           // --- Start Time Section ---
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Start Time:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Stopwatch'),
-                      selected: _startTimeMode == 'Stopwatch',
-                      selectedColor: Theme.of(context).colorScheme.primary,
-                      labelStyle: TextStyle(
-                        color: _startTimeMode == 'Stopwatch'
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _startTimeMode = 'Stopwatch'),
-                    ),
-                    ChoiceChip(
-                      label: const Text('Timer'),
-                      selected: _startTimeMode == 'Timer',
-                      selectedColor: Theme.of(context).colorScheme.primary,
-                      labelStyle: TextStyle(
-                        color: _startTimeMode == 'Timer'
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _startTimeMode = 'Timer'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       const Text('Start Time:',
+          //           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          //       const SizedBox(height: 8),
+          //       Wrap(
+          //         spacing: 10,
+          //         children: [
+          //           ChoiceChip(
+          //             label: const Text('Stopwatch'),
+          //             selected: _startTimeMode == 'Stopwatch',
+          //             selectedColor: Theme.of(context).colorScheme.primary,
+          //             labelStyle: TextStyle(
+          //               color: _startTimeMode == 'Stopwatch'
+          //                   ? Colors.white
+          //                   : Theme.of(context).colorScheme.onSurface,
+          //             ),
+          //             onSelected: (_) =>
+          //                 setState(() => _startTimeMode = 'Stopwatch'),
+          //           ),
+          //           ChoiceChip(
+          //             label: const Text('Timer'),
+          //             selected: _startTimeMode == 'Timer',
+          //             selectedColor: Theme.of(context).colorScheme.primary,
+          //             labelStyle: TextStyle(
+          //               color: _startTimeMode == 'Timer'
+          //                   ? Colors.white
+          //                   : Theme.of(context).colorScheme.onSurface,
+          //             ),
+          //             onSelected: (_) =>
+          //                 setState(() => _startTimeMode = 'Timer'),
+          //           ),
+          //         ],
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // --- Rest Time Section ---
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Rest Time:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Stopwatch'),
-                      selected: _restTimeMode == 'Stopwatch',
-                      selectedColor: Theme.of(context).colorScheme.primary,
-                      labelStyle: TextStyle(
-                        color: _restTimeMode == 'Stopwatch'
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _restTimeMode = 'Stopwatch'),
-                    ),
-                    ChoiceChip(
-                      label: const Text('Timer'),
-                      selected: _restTimeMode == 'Timer',
-                      selectedColor: Theme.of(context).colorScheme.primary,
-                      labelStyle: TextStyle(
-                        color: _restTimeMode == 'Timer'
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _restTimeMode = 'Timer'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       const Text('Rest Time:',
+          //           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          //       const SizedBox(height: 8),
+          //       Wrap(
+          //         spacing: 10,
+          //         children: [
+          //           ChoiceChip(
+          //             label: const Text('Stopwatch'),
+          //             selected: _restTimeMode == 'Stopwatch',
+          //             selectedColor: Theme.of(context).colorScheme.primary,
+          //             labelStyle: TextStyle(
+          //               color: _restTimeMode == 'Stopwatch'
+          //                   ? Colors.white
+          //                   : Theme.of(context).colorScheme.onSurface,
+          //             ),
+          //             onSelected: (_) =>
+          //                 setState(() => _restTimeMode = 'Stopwatch'),
+          //           ),
+          //           ChoiceChip(
+          //             label: const Text('Timer'),
+          //             selected: _restTimeMode == 'Timer',
+          //             selectedColor: Theme.of(context).colorScheme.primary,
+          //             labelStyle: TextStyle(
+          //               color: _restTimeMode == 'Timer'
+          //                   ? Colors.white
+          //                   : Theme.of(context).colorScheme.onSurface,
+          //             ),
+          //             onSelected: (_) =>
+          //                 setState(() => _restTimeMode = 'Timer'),
+          //           ),
+          //         ],
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // --- Sound Checkbox ---
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: _soundEnabled,
-                  onChanged: (value) =>
-                      setState(() => _soundEnabled = value ?? true),
-                ),
-                const Text('3sec countdown sound'),
-              ],
-            ),
-          ),
-
-          const Divider(),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          //   child: Row(
+          //     children: [
+          //       Checkbox(
+          //         value: _soundEnabled,
+          //         onChanged: (value) =>
+          //             setState(() => _soundEnabled = value ?? true),
+          //       ),
+          //       const Text('3sec countdown sound'),
+          //     ],
+          //   ),
+          // ),
+          //
+          // const Divider(),
 
           // --- Navigation Section ---
           Padding(
@@ -157,18 +157,18 @@ class _SetsSettingsDrawerState extends State<SetsSettingsDrawer> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => PlotsPage(exerciseId: widget.exerciseId, exerciseName: widget.exerciseName, isMetric: widget.isMetric,),
+                  builder: (_) => PlotsPage(exerciseId: widget.exerciseId, exerciseName: widget.exerciseName),
                 ),
               );
             },
           ),
-          ListTile(
-            title: const Text('Information'),
-            leading: const Icon(Icons.info_outline),
-            onTap: () {
-              // TODO: navigate to info page
-            },
-          ),
+          // ListTile(
+          //   title: const Text('Information'),
+          //   leading: const Icon(Icons.info_outline),
+          //   onTap: () {
+          //     // TODO: navigate to info page
+          //   },
+          // ),
         ],
       ),
     );
