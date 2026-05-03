@@ -184,7 +184,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
             children: sortedDates.map((dateKey) {
               final dateSets = groupedByDate[dateKey]!;
               final displayDate =
-              DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
+              DateFormat('EEE, dd MMM yyyy').format(DateTime.parse(dateKey));
 
               // total day times
               int totalWorkDay = dateSets.fold(0, (sum, s) => sum + s.workTime);
@@ -448,7 +448,7 @@ class _ExerciseLogPageState extends State<ExerciseLogPage> {
 
           for (final dateKey in sortedDates) {
             final dateSets = groupedByDate[dateKey]!;
-            final displayDate = DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
+            final displayDate = DateFormat('EEE, dd MMM yyyy').format(DateTime.parse(dateKey));
 
             // Date header
             widgets.add(

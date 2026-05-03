@@ -413,7 +413,7 @@ class _SetsPageState extends State<SetsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: const [
-                              Flexible(flex: 1, child: Center(child: Text('Date'))),
+                              Flexible(flex: 1, child: Center(child: Text('Time'))),
                               Flexible(flex: 1, child: Center(child: Text('Workout'))),
                               Flexible(flex: 1, child: Center(child: Text('Rest'))),
                             ],
@@ -454,7 +454,7 @@ class _SetsPageState extends State<SetsPage> {
                         children: sortedDates.map((dateKey) {
                           final dateSets = grouped[dateKey]!;
                           final displayDate =
-                          DateFormat('dd.MM.yyyy').format(DateTime.parse(dateKey));
+                          DateFormat('EEE, dd MMM yyyy').format(DateTime.parse(dateKey));
 
                           // Calculate total sets, reps, and volume for this date
                           int totalSets = dateSets.length;
